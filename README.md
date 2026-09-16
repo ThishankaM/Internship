@@ -1,15 +1,15 @@
-# Todo App
+# TaskFlow
 
-A small React + TypeScript todo application built with Vite, Tailwind CSS v4, and shadcn/ui (Base UI primitives).
+A dark-themed Kanban todo app built with React, TypeScript, Vite, Tailwind CSS v4, and shadcn/ui (Base UI primitives).
 
 ## Features
 
-- Add todos with a title and optional description
-- Mark todos as complete or incomplete
-- Edit todo title and description inline
-- Delete todos
-- Empty state and completed/total counter
-- Required title validation
+- Three-column Kanban board: To do, In Progress, and Done
+- Create, edit, and delete todos through a modal
+- Fetch and persist todos against a REST API
+- Refresh the board on demand
+- Navigation sidebar and project summary panel
+- Custom dark color palette managed with CSS variables
 
 ## Stack
 
@@ -27,6 +27,14 @@ npm install
 npm run dev
 ```
 
+The frontend expects a todo API at:
+
+```text
+http://localhost:3000/todos
+```
+
+Make sure the API allows CORS from the Vite development server.
+
 ## Scripts
 
 - `npm run dev` — start the development server
@@ -34,15 +42,45 @@ npm run dev
 - `npm run lint` — run ESLint
 - `npm run preview` — preview the production build
 
+## API
+
+| Method | Endpoint     | Description    |
+| ------ | ------------ | -------------- |
+| GET    | `/todos`     | List all todos |
+| POST   | `/todos`     | Create a todo  |
+| PATCH  | `/todos/:id` | Update a todo  |
+| DELETE | `/todos/:id` | Delete a todo  |
+
+Todo shape used by the app:
+
+```ts
+type TodoStatus = "todo" | "in-progress" | "done";
+
+interface Todo {
+  id: string;
+  title: string;
+  description: string;
+  status: TodoStatus;
+  createdAt: string | Date;
+}
+```
+
 ## Project structure
 
 ```text
 src/
   components/
-    todo-form.tsx
-    todo-item.tsx
-    todo-list.tsx
-    ui/          # shadcn/ui primitives
+    TaskCard.tsx
+    TodoModal.tsx
+    kanban-column.tsx
+    mini-project-card.tsx
+    nav-item.tsx
+    project-panel.tsx
+    task-sidebar.tsx
+    task-toolbar.tsx
+    ui/               # shadcn/ui primitives
+  hooks/
+    use-mobile.ts
   lib/
     utils.ts
   types/
@@ -51,3 +89,15 @@ src/
   main.tsx
   index.css
 ```
+
+## Theme
+
+The palette is defined in `src/index.css` through CSS variables. Key colors:
+
+- Main background: `#000000`
+- Sidebar: `#050505`
+- Cards: `#050505`
+- Borders: `#242424`
+- Primary accent: `#8A73FF`
+- Danger: `#FF5C5C`
+- Success: `#32D6A0`
