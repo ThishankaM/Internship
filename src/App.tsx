@@ -167,6 +167,11 @@ export default function App() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(todoData),
         });
+        if (!response.ok) {
+          throw new Error(
+            `Failed to update todo: ${response.status} ${response.statusText}`
+          );
+        }
         const updatedTodo = await response.json();
         setTodos((current) =>
           current.map((todo) =>
@@ -179,6 +184,11 @@ export default function App() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(todoData),
         });
+        if (!response.ok) {
+          throw new Error(
+            `Failed to create todo: ${response.status} ${response.statusText}`
+          );
+        }
         const newTodo = await response.json();
         setTodos((current) => [...current, newTodo]);
       }
@@ -189,9 +199,14 @@ export default function App() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
+      if (!response.ok) {
+        throw new Error(
+          `Failed to delete todo: ${response.status} ${response.statusText}`
+        );
+      }
       setTodos((current) => current.filter((todo) => todo.id !== id));
     } catch (error) {
       console.error("Failed to delete todo:", error);
