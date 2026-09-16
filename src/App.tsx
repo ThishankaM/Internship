@@ -1,6 +1,12 @@
 import { useState } from "react";
+import AppSidebar from "@/components/app-sidebar";
 import TodoForm from "@/components/todo-form";
 import TodoList from "@/components/todo-list";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import type { Todo, TodoFormData } from "@/types/todo";
 
 const App: React.FC = () => {
@@ -33,31 +39,34 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-2xl py-8 px-4">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Todo App
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your tasks efficiently
-          </p>
+    <SidebarProvider>
+      <AppSidebar />
+
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-2 border-b px-4">
+          <SidebarTrigger />
+          <h1 className="font-semibold">Todos</h1>
         </header>
+        <div className="container mx-auto max-w-2xl px-4 py-8">
+          <header className="mb-8 text-center">
+            <h2 className="text-4xl font-bold tracking-tight">Todo App</h2>
+            <p className="mt-2 text-muted-foreground">
+              Manage your tasks efficiently
+            </p>
+          </header>
 
-        {/* Add Todo Form */}
-        <div className="mb-8">
-          <TodoForm onSubmit={handleAddTodo} />
+          <div className="mb-8">
+            <TodoForm onSubmit={handleAddTodo} />
+          </div>
+
+          <TodoList
+            todos={todos}
+            onUpdate={handleUpdateTodo}
+            onDelete={handleDeleteTodo}
+          />
         </div>
-
-        {/* Todo List */}
-        <TodoList
-          todos={todos}
-          onUpdate={handleUpdateTodo}
-          onDelete={handleDeleteTodo}
-        />
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

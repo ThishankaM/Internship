@@ -90,7 +90,7 @@ const TodoForm: React.FC<TodoFormProps> = ({
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-2">
             <Button type="submit">
               {isEditing ? "Update Todo" : "Add Todo"}
             </Button>
