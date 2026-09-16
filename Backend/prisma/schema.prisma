@@ -1,0 +1,28 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Todo {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+
+  // Extra fields for the Kanban Board UI
+  status      String   @default("todo")
+  progress    Int      @default(0)
+  dueDate     String?
+  comments    Int      @default(0)
+  attachments Int      @default(0)
+
+  // Required timestamps
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
