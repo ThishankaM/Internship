@@ -38,7 +38,7 @@ const App: React.FC = () => {
         {/* Header */}
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold tracking-tight">
-            📝 Todo App
+            Todo App
           </h1>
           <p className="text-muted-foreground mt-2">
             Manage your tasks efficiently
