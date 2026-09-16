@@ -1,103 +1,139 @@
-# TaskFlow
+# TaskFlow Frontend
 
-A dark-themed Kanban todo app built with React, TypeScript, Vite, Tailwind CSS v4, and shadcn/ui (Base UI primitives).
+The frontend for TaskFlow, a dark-themed Kanban todo application. It is built with React, TypeScript, Vite, Tailwind CSS v4, and shadcn/ui primitives backed by Base UI.
 
 ## Features
 
-- Three-column Kanban board: To do, In Progress, and Done
-- Create, edit, and delete todos through a modal
-- Fetch and persist todos against a REST API
+- Three-column Kanban board: To do List, In Progress, and Done
+- Create todos through a dialog modal
+- Edit todo title, description, and status
+- Delete todos from any column
+- Fetch todos from the backend REST API
 - Refresh the board on demand
 - Navigation sidebar and project summary panel
-- Custom dark color palette managed with CSS variables
+- Dark theme configured through CSS variables
 
-## Stack
+## Tech Stack
 
 - React 19
 - TypeScript
 - Vite
 - Tailwind CSS v4
-- shadcn/ui (Base UI primitives)
+- shadcn/ui and Base UI primitives
 - lucide-react
 
-## Getting started
+## Prerequisites
 
-```bash
+- Node.js
+- npm
+- The TaskFlow backend running on `http://localhost:3000`
+
+## Setup
+
+```powershell
+cd FrontEnd
 npm install
 npm run dev
 ```
 
-The frontend expects a todo API at:
+Open:
+
+```text
+http://localhost:5173
+```
+
+The frontend expects the backend API to be available at:
 
 ```text
 http://localhost:3000/todos
 ```
 
-Make sure the API allows CORS from the Vite development server.
+Make sure the backend CORS configuration allows the Vite development server origin.
 
 ## Scripts
 
-- `npm run dev` — start the development server
-- `npm run build` — type-check and build for production
-- `npm run lint` — run ESLint
-- `npm run preview` — preview the production build
+| Script             | Description                              |
+| ------------------ | ---------------------------------------- |
+| `npm run dev`      | Start the Vite development server         |
+| `npm run build`    | Type-check and create a production build  |
+| `npm run lint`     | Run ESLint                                |
+| `npm run preview`  | Preview the production build              |
 
-## API
+## API Integration
 
-| Method | Endpoint     | Description    |
+The API base URL is defined in `src/App.tsx`:
+
+```ts
+const API_URL = "http://localhost:3000/todos";
+```
+
+The UI uses these endpoints:
+
+| Method | Endpoint     | Purpose        |
 | ------ | ------------ | -------------- |
 | GET    | `/todos`     | List all todos |
 | POST   | `/todos`     | Create a todo  |
 | PATCH  | `/todos/:id` | Update a todo  |
 | DELETE | `/todos/:id` | Delete a todo  |
 
-Todo shape used by the app:
+The frontend groups todos into columns using the `status` field:
 
 ```ts
 type TodoStatus = "todo" | "in-progress" | "done";
-
-interface Todo {
-  id: string;
-  title: string;
-  description: string;
-  status: TodoStatus;
-  createdAt: string | Date;
-}
 ```
 
-## Project structure
+## Project Structure
 
 ```text
-src/
-  components/
-    TaskCard.tsx
-    TodoModal.tsx
-    kanban-column.tsx
-    mini-project-card.tsx
-    nav-item.tsx
-    project-panel.tsx
-    task-sidebar.tsx
-    task-toolbar.tsx
-    ui/               # shadcn/ui primitives
-  hooks/
-    use-mobile.ts
-  lib/
-    utils.ts
-  types/
-    todo.ts
-  App.tsx
-  main.tsx
-  index.css
+FrontEnd/
+  public/
+  src/
+    components/
+      TaskCard.tsx
+      TodoModal.tsx
+      kanban-column.tsx
+      mini-project-card.tsx
+      nav-item.tsx
+      project-panel.tsx
+      task-sidebar.tsx
+      task-toolbar.tsx
+      ui/
+    hooks/
+      use-mobile.ts
+    lib/
+      utils.ts
+    types/
+      todo.ts
+    App.tsx
+    index.css
+    main.tsx
+  vite.config.ts
+  package.json
 ```
+
+## Main Components
+
+| Component        | Responsibility                                        |
+| ---------------- | ----------------------------------------------------- |
+| `App`            | Holds todo state and coordinates API calls            |
+| `TaskSidebar`    | Left navigation sidebar                               |
+| `TaskToolbar`    | Search, filter, sort, refresh, and new task controls  |
+| `KanbanColumn`   | Renders one status column of todo cards               |
+| `TaskCard`       | Displays one todo and provides edit/delete actions    |
+| `TodoModal`      | Create/edit dialog with title, description, and status |
+| `ProjectPanel`   | Right-side profile and project summary panel          |
 
 ## Theme
 
-The palette is defined in `src/index.css` through CSS variables. Key colors:
+The palette is defined in `src/index.css` with CSS variables. Key colors include:
 
-- Main background: `#000000`
-- Sidebar: `#050505`
-- Cards: `#050505`
-- Borders: `#242424`
-- Primary accent: `#8A73FF`
-- Danger: `#FF5C5C`
-- Success: `#32D6A0`
+| Purpose       | Value      |
+| ------------- | ---------- |
+| Background    | `#000000`  |
+| Sidebar       | `#050505`  |
+| Cards         | `#050505`  |
+| Borders       | `#242424`  |
+| Primary       | `#8A73FF`  |
+| Danger        | `#FF5C5C`  |
+| Success       | `#32D6A0`  |
+
