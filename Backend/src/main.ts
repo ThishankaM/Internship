@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument, isObserveEnabled } from './app.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { JsonLoggerService } from './common/logging/json-logger.service.js';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware.js';
 
 async function bootstrap() {
   const app = isObserveEnabled
@@ -19,6 +20,8 @@ async function bootstrap() {
 
   app.useLogger(logger);
   app.use(helmet());
+  const requestLogger = new RequestLoggerMiddleware(logger);
+  app.use(requestLogger.use.bind(requestLogger));
 
   app.setGlobalPrefix('api');
   app.enableVersioning({
