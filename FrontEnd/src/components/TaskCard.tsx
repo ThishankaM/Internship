@@ -1,5 +1,5 @@
 import { Loader2, MessageSquare, MoreHorizontal, Paperclip } from "lucide-react";
-import type { Todo, TodoStatus } from "@/types/todo";
+import type { Todo, TodoPriority, TodoStatus } from "@/types/todo";
 
 interface TaskCardProps {
   todo: Todo;
@@ -20,6 +20,22 @@ export function TaskCard({
   onEdit,
   onDelete,
 }: TaskCardProps) {
+  const isOverdue =
+    Boolean(todo.dueDate) &&
+    new Date(todo.dueDate as string) < new Date() &&
+    !todo.completed;
+  const formattedDate = todo.dueDate
+    ? new Date(todo.dueDate).toLocaleDateString()
+    : "No Due Date";
+
+  const getPriorityColor = (priority: TodoPriority) => {
+    if (priority === "HIGH") return "text-destructive bg-destructive/10";
+    if (priority === "MEDIUM") {
+      return "text-secondary-accent bg-secondary-accent/10";
+    }
+    return "text-primary bg-primary/10";
+  };
+
   return (
     <div
       className={`mb-4 rounded-xl border border-border bg-card p-4 text-card-foreground transition-opacity ${
@@ -28,38 +44,47 @@ export function TaskCard({
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="truncate text-sm font-medium">{todo.title}</h4>
+          <h4 className="truncate text-sm font-medium text-card-foreground">
+            {todo.title}
+          </h4>
           {todo.description && (
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
               {todo.description}
             </p>
           )}
         </div>
-        {isDeleting ? (
-          <Loader2 size={16} className="animate-spin text-muted-foreground" />
-        ) : (
-          <details className="relative">
-            <summary className="list-none cursor-pointer text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
-              <MoreHorizontal size={16} />
-            </summary>
-            <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-md">
-              <button
-                type="button"
-                onClick={() => onEdit(todo)}
-                className="block w-full rounded px-2 py-1.5 text-left transition-colors hover:bg-accent"
-              >
-                Edit Task
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(todo.id)}
-                className="block w-full rounded px-2 py-1.5 text-left text-destructive transition-colors hover:bg-accent"
-              >
-                Delete Task
-              </button>
-            </div>
-          </details>
-        )}
+        <div className="flex shrink-0 items-start gap-2">
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getPriorityColor(todo.priority)}`}
+          >
+            {todo.priority}
+          </span>
+          {isDeleting ? (
+            <Loader2 size={16} className="animate-spin text-muted-foreground" />
+          ) : (
+            <details className="relative">
+              <summary className="list-none cursor-pointer text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <MoreHorizontal size={16} />
+              </summary>
+              <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-md">
+                <button
+                  type="button"
+                  onClick={() => onEdit(todo)}
+                  className="block w-full rounded px-2 py-1.5 text-left transition-colors hover:bg-accent"
+                >
+                  Edit Task
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(todo.id)}
+                  className="block w-full rounded px-2 py-1.5 text-left text-destructive transition-colors hover:bg-accent"
+                >
+                  Delete Task
+                </button>
+              </div>
+            </details>
+          )}
+        </div>
       </div>
 
       <div className="mt-4">
@@ -75,8 +100,15 @@ export function TaskCard({
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-          {todo.dueDate ?? "No due date"}
+        <div
+          className={`rounded-full px-3 py-1 text-xs ${
+            isOverdue
+              ? "border border-destructive/50 bg-destructive/20 font-bold text-destructive"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {formattedDate}
+          {isOverdue && " (Overdue)"}
         </div>
         <div className="flex gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">

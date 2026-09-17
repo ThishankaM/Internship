@@ -1,10 +1,11 @@
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsOptional, 
-  IsBoolean, 
-  IsNumber, 
-  IsIn 
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsIn,
+  IsDateString,
 } from 'class-validator';
 
 export class CreateTodoDto {
@@ -31,7 +32,11 @@ export class CreateTodoDto {
   @IsOptional()
   progress?: number;
 
-  @IsString()
+  @IsIn(['LOW', 'MEDIUM', 'HIGH'])
+  @IsOptional()
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH';
+
+  @IsDateString()
   @IsOptional()
   dueDate?: string;
 

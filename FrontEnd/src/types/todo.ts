@@ -1,4 +1,5 @@
 export type TodoStatus = "todo" | "in-progress" | "done";
+export type TodoPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface Todo {
   id: string;
@@ -6,6 +7,7 @@ export interface Todo {
   description: string | null;
   completed: boolean;
   status: TodoStatus;
+  priority: TodoPriority;
   progress: number;
   dueDate: string | null;
   comments: number;
@@ -20,6 +22,7 @@ export interface CreateTodoRequest {
   description?: string;
   completed?: boolean;
   status?: TodoStatus;
+  priority?: TodoPriority;
   progress?: number;
   dueDate?: string;
   comments?: number;

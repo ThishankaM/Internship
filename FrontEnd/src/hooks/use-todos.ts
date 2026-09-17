@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { todoApi } from "@/services/todo-api";
 import { ApiError } from "@/services/api-client";
-import type { RequestStatus } from "@/types/api";
+import type {
+  PaginatedResponse,
+  RequestStatus,
+  TodoQueryParams,
+} from "@/types/api";
 import type {
   CreateTodoRequest,
   Todo,
@@ -9,7 +13,17 @@ import type {
 } from "@/types/todo";
 
 export function useTodos(enabled: boolean = true) {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [data, setData] = useState<PaginatedResponse<Todo>>({
+    data: [],
+    meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+  });
+  const [params, setParams] = useState<TodoQueryParams>({
+    page: 1,
+    limit: 10,
+    sortBy: "created_at",
+    sortOrder: "desc",
+    filter: "all",
+  });
   const [status, setStatus] = useState<RequestStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -18,29 +32,32 @@ export function useTodos(enabled: boolean = true) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
-  const fetchTodos = useCallback(async (signal?: AbortSignal) => {
+  const fetchTodos = useCallback(
+    async (currentParams: TodoQueryParams, signal?: AbortSignal) => {
     setStatus("loading");
     setError(null);
 
     try {
-      const data = await todoApi.getAll(signal);
-      setTodos(data);
+      const result = await todoApi.getAll(currentParams, signal);
+      setData(result);
       setStatus("success");
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       setStatus("error");
       setError(err instanceof ApiError ? err.message : "Failed to load todos");
     }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!enabled) return;
     const controller = new AbortController();
 
     todoApi
-      .getAll(controller.signal)
-      .then((data) => {
-        setTodos(data);
+      .getAll(params, controller.signal)
+      .then((result) => {
+        setData(result);
         setStatus("success");
         setError(null);
       })
@@ -53,14 +70,23 @@ export function useTodos(enabled: boolean = true) {
       });
 
     return () => controller.abort();
-  }, [enabled]);
+  }, [enabled, params]);
+
+  const updateParams = useCallback((newParams: Partial<TodoQueryParams>) => {
+    setStatus("loading");
+    setParams((prev) => ({
+      ...prev,
+      ...newParams,
+      page: newParams.page ?? 1,
+    }));
+  }, []);
 
   const createTodo = useCallback(async (payload: CreateTodoRequest) => {
     setIsSaving(true);
     setMutationError(null);
     try {
       const created = await todoApi.create(payload);
-      setTodos((prev) => [...prev, created]);
+      await fetchTodos(params);
       return { ok: true as const, data: created };
     } catch (err) {
       const message =
@@ -70,7 +96,7 @@ export function useTodos(enabled: boolean = true) {
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [fetchTodos, params]);
 
   const updateTodo = useCallback(
     async (id: string, payload: UpdateTodoRequest) => {
@@ -78,7 +104,7 @@ export function useTodos(enabled: boolean = true) {
       setMutationError(null);
       try {
         const updated = await todoApi.update(id, payload);
-        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        await fetchTodos(params);
         return { ok: true as const, data: updated };
       } catch (err) {
         const message =
@@ -89,22 +115,18 @@ export function useTodos(enabled: boolean = true) {
         setIsSaving(false);
       }
     },
-    []
+    [fetchTodos, params]
   );
 
   const deleteTodo = useCallback(async (id: string) => {
     setDeletingId(id);
     setMutationError(null);
 
-    // Optimistic update with rollback
-    const snapshot = todos;
-    setTodos((prev) => prev.filter((t) => t.id !== id));
-
     try {
       await todoApi.remove(id);
+      await fetchTodos(params);
       return { ok: true as const };
     } catch (err) {
-      setTodos(snapshot); // rollback
       const message =
         err instanceof ApiError ? err.message : "Failed to delete todo";
       setMutationError(message);
@@ -112,15 +134,18 @@ export function useTodos(enabled: boolean = true) {
     } finally {
       setDeletingId(null);
     }
-  }, [todos]);
+  }, [fetchTodos, params]);
 
   return {
-    todos,
+    todos: data.data,
+    meta: data.meta,
+    params,
+    updateParams,
     isLoading: status === "loading" || status === "idle",
     isError: status === "error",
-    isEmpty: status === "success" && todos.length === 0,
+    isEmpty: status === "success" && data.data.length === 0,
     error,
-    refetch: () => fetchTodos(),
+    refetch: () => fetchTodos(params),
 
     createTodo,
     updateTodo,

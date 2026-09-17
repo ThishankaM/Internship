@@ -11,7 +11,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { CreateTodoRequest, Todo, TodoStatus } from "@/types/todo";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type {
+  CreateTodoRequest,
+  Todo,
+  TodoPriority,
+  TodoStatus,
+} from "@/types/todo";
 
 interface TodoModalProps {
   isOpen: boolean;
@@ -46,6 +58,8 @@ export function TodoModal({
   const [progress, setProgress] = useState(
     String(editingTodo?.progress ?? 0)
   );
+  const [priority, setPriority] = useState(editingTodo?.priority ?? "MEDIUM");
+  const [dueDate, setDueDate] = useState(editingTodo?.dueDate ?? "");
   const [validationError, setValidationError] = useState("");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -63,6 +77,8 @@ export function TodoModal({
       status,
       progress: Number(progress) || 0,
       completed: status === "done",
+      priority,
+      dueDate: dueDate || undefined,
     });
 
     if (success) {
@@ -145,6 +161,37 @@ export function TodoModal({
                 disabled={isSaving}
                 value={progress}
                 onChange={(event) => setProgress(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="todo-priority">Priority</Label>
+              <Select
+                value={priority}
+                items={{ LOW: "Low", MEDIUM: "Medium", HIGH: "High" }}
+                disabled={isSaving}
+                onValueChange={(value) => setPriority(value as TodoPriority)}
+              >
+                <SelectTrigger id="todo-priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOW">Low</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="todo-due-date">Due Date</Label>
+              <Input
+                id="todo-due-date"
+                type="date"
+                value={dueDate}
+                disabled={isSaving}
+                onChange={(event) => setDueDate(event.target.value)}
               />
             </div>
           </div>

@@ -4,10 +4,20 @@ import type {
   Todo,
   UpdateTodoRequest,
 } from "@/types/todo";
+import type { TodoQueryParams, PaginatedResponse } from "@/types/api"
 
 export const todoApi = {
-  getAll(signal?: AbortSignal): Promise<Todo[]> {
-    return apiClient.get<Todo[]>("/todos", { signal });
+  getAll(
+    params: TodoQueryParams,
+    signal?: AbortSignal,
+  ): Promise<PaginatedResponse<Todo>> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") query.append(key, String(value));
+    });
+    return apiClient.get<PaginatedResponse<Todo>>(`/todos?${query.toString()}`, {
+      signal,
+    });
   },
 
   getById(id: string): Promise<Todo> {

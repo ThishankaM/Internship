@@ -1,8 +1,9 @@
 // src/todos/todos.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { TodosService } from './todos.service.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
+import { QueryTodoDto } from './dto/query-todo.dto.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthenticatedRequest } from '../auth/authenticated-request.js';
 
@@ -17,8 +18,8 @@ export class TodosController {
   }
 
   @Get()
-  findAll(@Request() req: AuthenticatedRequest) {
-    return this.todosService.findAll(req.user.id);
+  findAll(@Query() query: QueryTodoDto, @Request() req: AuthenticatedRequest) {
+    return this.todosService.findAll(req.user.id, query);
   }
 
   @Get(':id')

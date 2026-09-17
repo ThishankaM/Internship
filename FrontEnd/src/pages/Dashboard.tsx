@@ -33,6 +33,8 @@ export default function Dashboard() {
     deletingId,
     mutationError,
     clearMutationError,
+    params,
+    updateParams,
   } = useTodos(Boolean(user));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,6 +105,8 @@ export default function Dashboard() {
           isRefreshing={isLoading}
           onRefresh={refetch}
           onCreate={openCreateModal}
+          params={params}
+          onUpdateParams={updateParams}
         />
 
         {/* GLOBAL FETCH ERROR */}

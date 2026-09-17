@@ -11,3 +11,22 @@ export interface AsyncState<T> {
   status: RequestStatus;
   error: string | null;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface TodoQueryParams {
+  search?: string;
+  filter?: 'all' | 'active' | 'completed';
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}

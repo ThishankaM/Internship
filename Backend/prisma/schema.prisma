@@ -9,6 +9,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id         String   @id @default(uuid())
   name       String
@@ -27,6 +33,7 @@ model Todo {
   completed   Boolean  @default(false)
   status      String   @default("todo")
   progress    Int      @default(0)
+  priority    Priority  @default(MEDIUM)
   dueDate     String?
   comments    Int      @default(0)
   attachments Int      @default(0)
