@@ -7,7 +7,21 @@ describe('TodosService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TodosService, PrismaService],
+      providers: [
+        TodosService,
+        {
+          provide: PrismaService,
+          useValue: {
+            todo: {
+              create: vi.fn(),
+              findMany: vi.fn(),
+              findFirst: vi.fn(),
+              update: vi.fn(),
+              delete: vi.fn(),
+            },
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<TodosService>(TodosService);

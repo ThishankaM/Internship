@@ -1,35 +1,21 @@
-import {
-  HelpCircle,
-  Info,
-  Radio,
-  Settings,
-  Sun,
-  User,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { HelpCircle, Info, Radio, Sun} from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { MiniProjectCard } from "@/components/mini-project-card";
 
+
 export function ProjectPanel() {
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
   return (
     <aside className="hidden w-80 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
       <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <User className="size-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">Alex Doe</p>
-          <p className="truncate text-xs text-muted-foreground">
-            alex@example.com
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="ml-auto"
-          aria-label="Settings"
-        >
-          <Settings />
-        </Button>
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={setDate}
+          className="w-full rounded-lg border"
+          captionLayout="dropdown"
+        />
       </div>
 
       <div>
@@ -57,16 +43,32 @@ export function ProjectPanel() {
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-muted-foreground">
-        <button type="button" className="flex items-center gap-1.5" aria-label="Theme">
+        <button
+          type="button"
+          className="flex items-center gap-1.5"
+          aria-label="Theme"
+        >
           <Sun className="size-4" /> Theme
         </button>
-        <button type="button" className="flex items-center gap-1.5" aria-label="Help">
+        <button
+          type="button"
+          className="flex items-center gap-1.5"
+          aria-label="Help"
+        >
           <HelpCircle className="size-4" /> Help
         </button>
-        <button type="button" className="flex items-center gap-1.5" aria-label="Info">
+        <button
+          type="button"
+          className="flex items-center gap-1.5"
+          aria-label="Info"
+        >
           <Info className="size-4" /> Info
         </button>
-        <button type="button" className="flex items-center gap-1.5" aria-label="Live">
+        <button
+          type="button"
+          className="flex items-center gap-1.5"
+          aria-label="Live"
+        >
           <Radio className="size-4" /> Live
         </button>
       </div>

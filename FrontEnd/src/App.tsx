@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { AuthPage } from "@/pages/AuthPage";
 import { KanbanColumn } from "@/components/kanban-column";
 import { ProjectPanel } from "@/components/project-panel";
 import { TaskSidebar } from "@/components/task-sidebar";
@@ -6,77 +8,111 @@ import { TaskToolbar } from "@/components/task-toolbar";
 import { TodoModal } from "@/components/TodoModal";
 import type { Todo } from "@/types/todo";
 
-const API_URL = "http://localhost:3000/todos";
+const BASE_URL = "http://localhost:3000";
 
-export default function App() {
+// --- DASHBOARD COMPONENT (Your layout with Auth attached) ---
+function Dashboard() {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const navigate = useNavigate();
 
-  const fetchTodos = async () => {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-      throw new Error("Failed to fetch todos");
-    }
-    return response.json();
-  };
+  // Helper for authenticated fetch requests
+  const authFetch = useCallback(
+    async (endpoint: string, options: RequestInit = {}) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return null;
+      }
 
-  const refreshTodos = async () => {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Handle expired or invalid tokens
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return null;
+      }
+
+      return res;
+    },
+    [navigate]
+  );
+
+  // Load User & Todos
+  const refreshTodos = useCallback(async () => {
     try {
-      const data = await fetchTodos();
-      setTodos(data);
+      const response = await authFetch("/todos");
+      if (response && response.ok) {
+        const data = await response.json();
+        setTodos(data);
+      }
     } catch (error) {
       console.error("Failed to fetch todos:", error);
     }
-  };
+  }, [authFetch]);
 
   useEffect(() => {
-    let cancelled = false;
+    let isMounted = true;
 
-    fetchTodos()
-      .then((data) => {
-        if (!cancelled) {
-          setTodos(data);
+    const initDashboard = async () => {
+      // 1. Fetch current authenticated user
+      const userRes = await authFetch("/auth/me");
+      if (userRes && userRes.ok) {
+        const userData = await userRes.json();
+        if (isMounted) setUser(userData);
+
+        // 2. Fetch user's todos
+        const todoRes = await authFetch("/todos");
+        if (todoRes && todoRes.ok && isMounted) {
+          const todoData = await todoRes.json();
+          setTodos(todoData);
         }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch todos:", error);
-      });
+      }
+    };
+
+    initDashboard();
 
     return () => {
-      cancelled = true;
+      isMounted = false;
     };
-  }, []);
+  }, [authFetch]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   const handleSaveTodo = async (todoData: Partial<Todo>) => {
     try {
       if (editingTodo) {
-        const response = await fetch(`${API_URL}/${editingTodo.id}`, {
+        const response = await authFetch(`/todos/${editingTodo.id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(todoData),
         });
-        if (!response.ok) {
-          throw new Error(
-            `Failed to update todo: ${response.status} ${response.statusText}`
-          );
+        if (!response || !response.ok) {
+          throw new Error("Failed to update todo");
         }
         const updatedTodo = await response.json();
         setTodos((current) =>
-          current.map((todo) =>
-            todo.id === editingTodo.id ? updatedTodo : todo
-          )
+          current.map((todo) => (todo.id === editingTodo.id ? updatedTodo : todo))
         );
       } else {
-        const response = await fetch(API_URL, {
+        const response = await authFetch("/todos", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(todoData),
         });
-        if (!response.ok) {
-          throw new Error(
-            `Failed to create todo: ${response.status} ${response.statusText}`
-          );
+        if (!response || !response.ok) {
+          throw new Error("Failed to create todo");
         }
         const newTodo = await response.json();
         setTodos((current) => [...current, newTodo]);
@@ -88,13 +124,11 @@ export default function App() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await authFetch(`/todos/${id}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to delete todo: ${response.status} ${response.statusText}`
-        );
+      if (!response || !response.ok) {
+        throw new Error("Failed to delete todo");
       }
       setTodos((current) => current.filter((todo) => todo.id !== id));
     } catch (error) {
@@ -116,12 +150,21 @@ export default function App() {
   const inProgressList = todos.filter((todo) => todo.status === "in-progress");
   const doneList = todos.filter((todo) => todo.status === "done");
 
+  if (!user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
+        Loading user data...
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-sm">
-      <TaskSidebar />
+      {/* TaskSidebar with Logout Handler */}
+      <TaskSidebar onLogout={handleLogout} user={user} />
 
       <main className="flex flex-1 flex-col overflow-hidden bg-background">
-        <TaskToolbar onRefresh={refreshTodos} onCreate={openCreateModal} />
+        <TaskToolbar onRefresh={refreshTodos} onCreate={openCreateModal} user={user} />
 
         <div className="flex flex-1 gap-6 overflow-x-auto overflow-y-hidden px-6 py-6">
           <KanbanColumn
@@ -158,5 +201,18 @@ export default function App() {
         editingTodo={editingTodo}
       />
     </div>
+  );
+}
+
+// --- MAIN APP ROUTER ---
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
