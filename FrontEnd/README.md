@@ -11,6 +11,9 @@ The frontend for TaskFlow, a dark-themed Kanban todo application. It is built wi
 - Fetch todos from the backend REST API
 - Refresh the board on demand
 - Navigation sidebar and project summary panel
+- Create, edit, delete, filter, and assign categories and tags
+- Login, register, refresh-token session handling, and password flows
+- Admin dashboard for user management and todo statistics
 - Dark theme configured through CSS variables
 
 ## Tech Stack
@@ -136,4 +139,3 @@ The palette is defined in `src/index.css` with CSS variables. Key colors include
 | Primary       | `#8A73FF`  |
 | Danger        | `#FF5C5C`  |
 | Success       | `#32D6A0`  |
-

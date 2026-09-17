@@ -1,5 +1,9 @@
 // src/todos/todos.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
@@ -12,6 +16,8 @@ export class TodosService {
 
   async create(createTodoDto: CreateTodoDto, userId: string) {
     const { categoryId, tagIds, ...rest } = createTodoDto;
+
+    await this.validateRelations(categoryId, tagIds, userId);
 
     return this.prisma.todo.create({
       data: {
@@ -92,6 +98,8 @@ export class TodosService {
 
     const { categoryId, tagIds, ...rest } = updateTodoDto;
 
+    await this.validateRelations(categoryId, tagIds, userId);
+
     return this.prisma.todo.update({
       where: { id },
       data: {
@@ -108,5 +116,34 @@ export class TodosService {
   async remove(id: string, userId: string) {
     await this.findOne(id, userId);
     return this.prisma.todo.delete({ where: { id } });
+  }
+
+  private async validateRelations(
+    categoryId?: string,
+    tagIds?: string[],
+    userId?: string,
+  ) {
+    if (categoryId) {
+      const category = await this.prisma.category.findFirst({
+        where: { id: categoryId, userId },
+      });
+
+      if (!category) {
+        throw new BadRequestException('Category not found or access denied');
+      }
+    }
+
+    if (tagIds?.length) {
+      const ownedTagCount = await this.prisma.tag.count({
+        where: {
+          id: { in: tagIds },
+          userId,
+        },
+      });
+
+      if (ownedTagCount !== tagIds.length) {
+        throw new BadRequestException('One or more tags are invalid');
+      }
+    }
   }
 }

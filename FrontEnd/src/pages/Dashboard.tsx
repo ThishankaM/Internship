@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { KanbanColumn } from "@/components/kanban-column";
 import { ProjectPanel } from "@/components/project-panel";
 import { TaskSidebar } from "@/components/task-sidebar";
 import { TaskToolbar } from "@/components/task-toolbar";
 import { TodoModal } from "@/components/TodoModal";
+import { OrganizerModal } from "@/components/OrganizerModal";
+import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { LoadingState } from "@/components/states/loading-state";
 import { ErrorState } from "@/components/states/error-state";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/providers/auth-context";
 import { useTodos } from "@/hooks/use-todos";
+import { useTaxonomy } from "@/hooks/use-taxonomy";
 import type { CreateTodoRequest, Todo } from "@/types/todo";
 
 export default function Dashboard() {
@@ -16,7 +19,7 @@ export default function Dashboard() {
     isLoading: isUserLoading,
     isError: isUserError,
     error: userError,
-    loadCurrentUser,
+    reloadUser,
     logout,
   } = useAuth();
 
@@ -39,12 +42,22 @@ export default function Dashboard() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    loadCurrentUser(controller.signal);
-    return () => controller.abort();
-  }, [loadCurrentUser]);
+  const {
+    categories,
+    tags,
+    isLoading: isTaxonomyLoading,
+    isSaving: isTaxonomySaving,
+    error: taxonomyError,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    createTag,
+    updateTag,
+    deleteTag,
+  } = useTaxonomy(Boolean(user));
 
   const { todoList, inProgressList, doneList } = useMemo(
     () => ({
@@ -89,7 +102,7 @@ export default function Dashboard() {
         <ErrorState
           title="Session error"
           message={userError ?? "Please log in again."}
-          onRetry={logout}
+          onRetry={reloadUser}
         />
       </div>
     );
@@ -97,16 +110,21 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-sm">
-      <TaskSidebar user={user} onLogout={logout} />
+      <TaskSidebar
+        user={user}
+        onLogout={logout}
+        onChangePassword={() => setIsPasswordModalOpen(true)}
+      />
 
       <main className="flex flex-1 flex-col overflow-hidden bg-background">
         <TaskToolbar
           user={user}
-          isRefreshing={isLoading}
-          onRefresh={refetch}
           onCreate={openCreateModal}
           params={params}
           onUpdateParams={updateParams}
+          categories={categories}
+          tags={tags}
+          onManageTaxonomy={() => setIsOrganizerOpen(true)}
         />
 
         {/* GLOBAL FETCH ERROR */}
@@ -119,7 +137,7 @@ export default function Dashboard() {
             />
           </div>
         ) : (
-          <div className="flex flex-1 gap-6 overflow-x-auto overflow-y-hidden px-6 py-6">
+          <div className="flex flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 py-6">
             <KanbanColumn
               title="To do List"
               count={todoList.length}
@@ -162,8 +180,31 @@ export default function Dashboard() {
         isSaving={isSaving}
         serverError={mutationError}
         editingTodo={editingTodo}
+        categories={categories}
+        tags={tags}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <OrganizerModal
+        key={isOrganizerOpen ? "organizer-open" : "organizer-closed"}
+        open={isOrganizerOpen}
+        onClose={() => setIsOrganizerOpen(false)}
+        categories={categories}
+        tags={tags}
+        isSaving={isTaxonomySaving || isTaxonomyLoading}
+        error={taxonomyError}
+        onCreateCategory={createCategory}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
+        onCreateTag={createTag}
+        onUpdateTag={updateTag}
+        onDeleteTag={deleteTag}
+      />
+
+      <ChangePasswordModal
+        open={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
       />
     </div>
   );

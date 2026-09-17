@@ -25,6 +25,8 @@ export interface PaginatedResponse<T> {
 export interface TodoQueryParams {
   search?: string;
   filter?: 'all' | 'active' | 'completed';
+  categoryId?: string;
+  tagId?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: number;

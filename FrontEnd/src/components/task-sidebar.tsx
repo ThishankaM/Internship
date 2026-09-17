@@ -4,8 +4,8 @@ import {
   Briefcase,
   Calendar,
   Clock,
+  KeyRound,
   LogOut,
-  Settings,
   Shield,
   Sun,
 } from "lucide-react";
@@ -16,13 +16,18 @@ import type { User } from "@/types/auth";
 interface TaskSidebarProps {
   user: User | null;
   onLogout: () => void;
+  onChangePassword: () => void;
 }
 
-export function TaskSidebar({ user, onLogout }: TaskSidebarProps) {
+export function TaskSidebar({
+  user,
+  onLogout,
+  onChangePassword,
+}: TaskSidebarProps) {
   const navigate = useNavigate();
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-border bg-sidebar md:flex">
+    <aside className="hidden w-56 flex-col border-r border-border bg-sidebar md:flex">
       <div className="flex h-16 items-center gap-2 px-6 font-semibold text-foreground">
         <AlignLeft className="size-5 text-primary" />
         TaskFlow
@@ -46,7 +51,13 @@ export function TaskSidebar({ user, onLogout }: TaskSidebarProps) {
             {user.email}
           </p>
         )}
-        <NavItem icon={Settings} label="Settings" />
+        <button
+          onClick={onChangePassword}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <KeyRound size={18} />
+          Change Password
+        </button>
         <NavItem icon={Bell} label="Notifications" />
         <button
           onClick={onLogout}

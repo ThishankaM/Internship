@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type {
+  Category,
   CreateTodoRequest,
+  Tag,
   Todo,
   TodoPriority,
   TodoStatus,
@@ -30,6 +32,8 @@ interface TodoModalProps {
   isSaving: boolean;
   serverError: string | null;
   editingTodo: Todo | null;
+  categories: Category[];
+  tags: Tag[];
   onClose: () => void;
   onSave: (payload: CreateTodoRequest) => Promise<boolean>;
 }
@@ -45,6 +49,8 @@ export function TodoModal({
   isSaving,
   serverError,
   editingTodo,
+  categories,
+  tags,
   onClose,
   onSave,
 }: TodoModalProps) {
@@ -60,6 +66,12 @@ export function TodoModal({
   );
   const [priority, setPriority] = useState(editingTodo?.priority ?? "MEDIUM");
   const [dueDate, setDueDate] = useState(editingTodo?.dueDate ?? "");
+  const [categoryId, setCategoryId] = useState(
+    editingTodo?.category?.id ?? ""
+  );
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+    editingTodo?.tags?.map((tag) => tag.id) ?? []
+  );
   const [validationError, setValidationError] = useState("");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -79,6 +91,8 @@ export function TodoModal({
       completed: status === "done",
       priority,
       dueDate: dueDate || undefined,
+      categoryId: categoryId || null,
+      tagIds: selectedTagIds.length ? selectedTagIds : undefined,
     });
 
     if (success) {
@@ -193,6 +207,56 @@ export function TodoModal({
                 disabled={isSaving}
                 onChange={(event) => setDueDate(event.target.value)}
               />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="todo-category">Category</Label>
+              <select
+                id="todo-category"
+                value={categoryId}
+                disabled={isSaving}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setCategoryId(event.target.value)
+                }
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">No category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="todo-tags">Tags</Label>
+              <select
+                id="todo-tags"
+                multiple
+                value={selectedTagIds}
+                disabled={isSaving}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setSelectedTagIds(
+                    Array.from(
+                      event.target.selectedOptions,
+                      (option) => option.value
+                    )
+                  )
+                }
+                className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {tags.map((tag) => (
+                  <option key={tag.id} value={tag.id}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Hold Ctrl/Cmd to select multiple tags.
+              </p>
             </div>
           </div>
 

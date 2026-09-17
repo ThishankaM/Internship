@@ -5,10 +5,13 @@ The backend for TaskFlow, a NestJS REST API that stores todos in PostgreSQL usin
 ## Features
 
 - CRUD API for todos
+- Categories and tags APIs with user-scoped authorization
 - PostgreSQL persistence through Prisma
 - DTO validation with `class-validator`
 - Global request validation with `whitelist` and `transform`
 - CORS configured for the TaskFlow frontend
+- JWT authentication, refresh tokens, roles, and admin endpoints
+- Change, forgot, and reset password flows
 - Optional NestJS Observe instrumentation
 - Unit and e2e test setup with Vitest
 
@@ -111,6 +114,45 @@ http://localhost:3000
 | GET    | `/todos/:id` | Get one todo by ID  |
 | PATCH  | `/todos/:id` | Update a todo       |
 | DELETE | `/todos/:id` | Delete a todo       |
+
+### Auth endpoints
+
+| Method | Endpoint                    | Description                              |
+| ------ | --------------------------- | ---------------------------------------- |
+| POST   | `/auth/register`            | Register a user                          |
+| POST   | `/auth/login`               | Login and return tokens                  |
+| POST   | `/auth/refresh`             | Refresh an access token                  |
+| GET    | `/auth/me`                  | Get the authenticated user               |
+| POST   | `/auth/change-password`     | Change the authenticated user's password |
+| POST   | `/auth/forgot-password`     | Simulated forgot-password flow           |
+| POST   | `/auth/reset-password`      | Reset password with a token              |
+
+### Category endpoints
+
+| Method | Endpoint           | Description                |
+| ------ | ------------------ | -------------------------- |
+| GET    | `/categories`      | List the user's categories |
+| POST   | `/categories`      | Create a category          |
+| PATCH  | `/categories/:id`  | Update a category          |
+| DELETE | `/categories/:id`  | Delete a category          |
+
+### Tag endpoints
+
+| Method | Endpoint      | Description          |
+| ------ | ------------- | -------------------- |
+| GET    | `/tags`       | List the user's tags |
+| POST   | `/tags`       | Create a tag         |
+| PATCH  | `/tags/:id`   | Update a tag         |
+| DELETE | `/tags/:id`   | Delete a tag         |
+
+### Admin endpoints
+
+| Method | Endpoint                          | Description                  |
+| ------ | --------------------------------- | ---------------------------- |
+| GET    | `/admin/users`                    | List users and todo counts   |
+| GET    | `/admin/stats`                    | Basic todo statistics        |
+| PATCH  | `/admin/users/:id/toggle-active`  | Enable or disable a user     |
+| PATCH  | `/admin/users/:id/role`           | Change a user's role         |
 
 ### Create Todo
 
@@ -256,4 +298,3 @@ Backend/
 ## Observability
 
 If `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` are set, the NestJS Observe module is enabled with the service ID `todo-backend`. Without those variables, the app starts normally without Observe instrumentation.
-

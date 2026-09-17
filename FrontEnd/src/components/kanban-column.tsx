@@ -26,7 +26,7 @@ export function KanbanColumn({
   onCreate,
 }: KanbanColumnProps) {
   return (
-    <div className="flex min-w-[300px] flex-1 flex-col rounded-xl border border-border bg-card p-4">
+    <div className="flex min-w-[220px] flex-1 flex-col rounded-xl border border-border bg-card p-4">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-medium text-card-foreground">
           {title}

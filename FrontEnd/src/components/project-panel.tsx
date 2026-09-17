@@ -10,12 +10,56 @@ interface ProjectPanelProps {
   isLoading: boolean;
 }
 
+function ProgressRing({ value }: { value: number }) {
+  const size = 40;
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.max(0, Math.min(100, value));
+  const offset = circumference - (clamped / 100) * circumference;
+
+  return (
+    <div className="relative flex size-10 shrink-0 items-center justify-center">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="-rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={strokeWidth}
+          className="stroke-muted"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="stroke-primary transition-all"
+        />
+      </svg>
+      <span className="absolute text-[10px] font-medium text-foreground">
+        {clamped}%
+      </span>
+    </div>
+  );
+}
+
 export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const topProjects = todos.slice(0, 4);
 
   return (
-    <aside className="hidden w-80 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
+    <aside className="hidden w-72 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
       <div className="flex items-center gap-3">
         <Calendar
           mode="single"
@@ -50,9 +94,7 @@ export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
                   {todo.description || "No description"}
                 </p>
               </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-primary">
-                <span className="text-[10px] text-foreground">{todo.progress}%</span>
-              </div>
+              <ProgressRing value={todo.progress} />
             </div>
           ))}
       </div>

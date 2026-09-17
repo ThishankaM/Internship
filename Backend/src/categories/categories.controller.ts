@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Delete,
   Param,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthenticatedRequest } from '../auth/authenticated-request.js';
 
@@ -29,6 +31,15 @@ export class CategoriesController {
   @Get()
   findAll(@Request() req: AuthenticatedRequest) {
     return this.categoriesService.findAll(req.user.id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.categoriesService.update(id, updateCategoryDto, req.user.id);
   }
 
   @Delete(':id')

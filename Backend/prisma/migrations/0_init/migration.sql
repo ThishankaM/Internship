@@ -14,6 +14,8 @@ CREATE TABLE "User" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "refreshToken" TEXT,
+    "resetToken" TEXT,
+    "resetTokenExpiresAt" TIMESTAMP(3),
     "role" "Role" NOT NULL DEFAULT 'USER',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")

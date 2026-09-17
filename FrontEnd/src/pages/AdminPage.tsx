@@ -18,8 +18,16 @@ interface AdminUser {
   _count: { todos: number };
 }
 
+interface AdminStats {
+  users: number;
+  todos: number;
+  completedTodos: number;
+  activeTodos: number;
+}
+
 export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -31,10 +39,11 @@ export default function AdminPage() {
   useEffect(() => {
     let cancelled = false;
 
-    fetchUsers()
-      .then((data) => {
+    Promise.all([fetchUsers(), apiClient.get<AdminStats>("/admin/stats")])
+      .then(([userData, statsData]) => {
         if (!cancelled) {
-          setUsers(data);
+          setUsers(userData);
+          setStats(statsData);
           setError(null);
         }
       })
@@ -56,8 +65,12 @@ export default function AdminPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchUsers();
-      setUsers(data);
+      const [userData, statsData] = await Promise.all([
+        fetchUsers(),
+        apiClient.get<AdminStats>("/admin/stats"),
+      ]);
+      setUsers(userData);
+      setStats(statsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
@@ -76,6 +89,22 @@ export default function AdminPage() {
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const changeRole = async (id: string, role: UserRole) => {
+    setPendingId(id);
+    try {
+      await apiClient.patch(`/admin/users/${id}/role`, { role });
+      setUsers((current) =>
+        current.map((user) =>
+          user.id === id ? { ...user, role } : user
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update role");
     } finally {
       setPendingId(null);
     }
@@ -115,6 +144,27 @@ export default function AdminPage() {
           />
         )}
 
+        {!isLoading && !error && stats && (
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Total Users</p>
+              <p className="mt-1 text-2xl font-semibold">{stats.users}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Total Todos</p>
+              <p className="mt-1 text-2xl font-semibold">{stats.todos}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Completed</p>
+              <p className="mt-1 text-2xl font-semibold">{stats.completedTodos}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="mt-1 text-2xl font-semibold">{stats.activeTodos}</p>
+            </div>
+          </div>
+        )}
+
         {!isLoading && !error && users.length > 0 && (
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <table className="w-full text-left text-sm">
@@ -136,7 +186,19 @@ export default function AdminPage() {
                   >
                     <td className="p-4">{user.name}</td>
                     <td className="p-4 text-muted-foreground">{user.email}</td>
-                    <td className="p-4">{user.role}</td>
+                    <td className="p-4">
+                      <select
+                        value={user.role}
+                        disabled={pendingId === user.id}
+                        onChange={(event) =>
+                          void changeRole(user.id, event.target.value as UserRole)
+                        }
+                        className="rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+                      >
+                        <option value="USER">USER</option>
+                        <option value="ADMIN">ADMIN</option>
+                      </select>
+                    </td>
                     <td className="p-4">{user._count.todos}</td>
                     <td className="p-4">
                       <span

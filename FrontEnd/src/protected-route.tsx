@@ -1,8 +1,7 @@
-import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { LoadingState } from "@/components/states/loading-state";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/providers/auth-context";
 import { authApi } from "@/services/auth-api";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -14,13 +13,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
 /** Only allows ADMIN users through; everyone else is sent back to the board. */
 export function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading, isError, loadCurrentUser } = useAuth();
-
-  useEffect(() => {
-    const controller = new AbortController();
-    loadCurrentUser(controller.signal);
-    return () => controller.abort();
-  }, [loadCurrentUser]);
+  const { user, isLoading, isError } = useAuth();
 
   if (!authApi.isAuthenticated()) {
     return <Navigate to="/login" replace />;

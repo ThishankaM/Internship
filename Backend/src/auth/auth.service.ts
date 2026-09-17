@@ -3,11 +3,19 @@ import {
   UnauthorizedException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto, LoginDto } from './dto/auth.dto.js';
+import { randomBytes, createHash } from 'crypto';
+import {
+  RegisterDto,
+  LoginDto,
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/auth.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -44,8 +52,19 @@ export class AuthService {
     return this.generateTokens(user.id, user.email, user.role);
   }
 
-  async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  async refresh(refreshToken: string) {
+    let payload: { sub: string };
+
+    try {
+      payload = await this.jwtService.verifyAsync<{ sub: string }>(refreshToken);
+    } catch {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
     if (!user || !user.refreshToken || !user.isActive) {
       throw new ForbiddenException('Access Denied');
     }
@@ -54,6 +73,107 @@ export class AuthService {
     if (!rtMatches) throw new ForbiddenException('Access Denied');
 
     return this.generateTokens(user.id, user.email, user.role);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Access denied');
+    }
+
+    const currentPasswordMatches = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
+
+    if (!currentPasswordMatches) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const newPasswordMatchesCurrent = await bcrypt.compare(
+      dto.newPassword,
+      user.password,
+    );
+
+    if (newPasswordMatchesCurrent) {
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        refreshToken: null,
+      },
+    });
+
+    return { message: 'Password updated successfully' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user || !user.isActive) {
+      return {
+        message:
+          'If that email exists, password reset instructions have been sent.',
+      };
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+    const hashedResetToken = this.hashToken(resetToken);
+    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetToken: hashedResetToken,
+        resetTokenExpiresAt,
+      },
+    });
+
+    // Email integration is outside the scope of this assignment.
+    // The token is returned so the simulated flow can be completed.
+    return {
+      message:
+        'If that email exists, password reset instructions have been sent.',
+      resetToken,
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const hashedResetToken = this.hashToken(dto.token);
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetToken: hashedResetToken,
+        resetTokenExpiresAt: { gt: new Date() },
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+        refreshToken: null,
+      },
+    });
+
+    return { message: 'Password has been reset successfully' };
   }
 
   private async generateTokens(userId: string, email: string, role: string) {
@@ -69,5 +189,9 @@ export class AuthService {
     });
 
     return { access_token: at, refresh_token: rt };
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 }

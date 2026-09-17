@@ -19,7 +19,7 @@ export function useTodos(enabled: boolean = true) {
   });
   const [params, setParams] = useState<TodoQueryParams>({
     page: 1,
-    limit: 10,
+    limit: 100,
     sortBy: "created_at",
     sortOrder: "desc",
     filter: "all",

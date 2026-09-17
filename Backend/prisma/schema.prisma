@@ -16,6 +16,8 @@ model User {
   updated_at   DateTime   @updatedAt
   isActive     Boolean    @default(true)
   refreshToken String?
+  resetToken   String?
+  resetTokenExpiresAt DateTime?
   role         Role       @default(USER)
   categories   Category[]
   tags         Tag[]

@@ -1,3 +1,4 @@
+import { format, isBefore, parseISO, startOfToday } from "date-fns";
 import { Loader2, MessageSquare, MoreHorizontal, Paperclip } from "lucide-react";
 import type { Todo, TodoPriority, TodoStatus } from "@/types/todo";
 
@@ -20,13 +21,11 @@ export function TaskCard({
   onEdit,
   onDelete,
 }: TaskCardProps) {
-  const isOverdue =
-    Boolean(todo.dueDate) &&
-    new Date(todo.dueDate as string) < new Date() &&
-    !todo.completed;
-  const formattedDate = todo.dueDate
-    ? new Date(todo.dueDate).toLocaleDateString()
-    : "No Due Date";
+  const dueDate = todo.dueDate ? parseISO(todo.dueDate) : null;
+  const isOverdue = dueDate
+    ? isBefore(dueDate, startOfToday()) && !todo.completed
+    : false;
+  const formattedDate = dueDate ? format(dueDate, "MMM d, yyyy") : "No Due Date";
 
   const getPriorityColor = (priority: TodoPriority) => {
     if (priority === "HIGH") return "text-destructive bg-destructive/10";
@@ -119,6 +118,24 @@ export function TaskCard({
           </span>
         </div>
       </div>
+
+      {(todo.category || (todo.tags && todo.tags.length > 0)) && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {todo.category && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+              {todo.category.name}
+            </span>
+          )}
+          {todo.tags?.map((tag) => (
+            <span
+              key={tag.id}
+              className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+            >
+              #{tag.name}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
