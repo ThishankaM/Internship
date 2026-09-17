@@ -87,7 +87,7 @@ export function TodoModal({
       title: title.trim(),
       description: description.trim() || undefined,
       status,
-      progress: Number(progress) || 0,
+      progress: status === "done" ? 100 : Number(progress) || 0,
       completed: status === "done",
       priority,
       dueDate: dueDate || undefined,
@@ -155,7 +155,13 @@ export function TodoModal({
                   STATUS_OPTIONS.map((option) => [option.value, option.label])
                 )}
                 disabled={isSaving}
-                onValueChange={(value) => setStatus(value as TodoStatus)}
+                onValueChange={(value) => {
+                  const nextStatus = value as TodoStatus;
+                  setStatus(nextStatus);
+                  if (nextStatus === "done") {
+                    setProgress("100");
+                  }
+                }}
               >
                 <SelectTrigger id="todo-status">
                   <SelectValue />

@@ -22,9 +22,15 @@ export default function App() {
       <AuthProvider>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
-            <Route path="/reset-password" element={<AuthPage mode="reset" />} />
+            <Route path="/login" element={<AuthPage key="login" />} />
+            <Route
+              path="/forgot-password"
+              element={<AuthPage key="forgot" mode="forgot" />}
+            />
+            <Route
+              path="/reset-password"
+              element={<AuthPage key="reset" mode="reset" />}
+            />
             <Route
               path="/"
               element={

@@ -1,10 +1,12 @@
 import { Plus } from "lucide-react";
+import { useDroppable } from "@dnd-kit/react";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskCardSkeleton } from "@/components/states/loading-state";
 import { EmptyState } from "@/components/states/empty-state";
-import type { Todo } from "@/types/todo";
+import type { Todo, TodoStatus } from "@/types/todo";
 
 interface KanbanColumnProps {
+  status: TodoStatus;
   title: string;
   count: number;
   todos: Todo[];
@@ -16,6 +18,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({
+  status,
   title,
   count,
   todos,
@@ -25,8 +28,17 @@ export function KanbanColumn({
   onDelete,
   onCreate,
 }: KanbanColumnProps) {
+  const { ref, isDropTarget } = useDroppable({ id: status });
+
   return (
-    <div className="flex min-w-[220px] flex-1 flex-col rounded-xl border border-border bg-card p-4">
+    <div
+      ref={ref}
+      className={`flex min-w-[220px] flex-1 flex-col rounded-xl border bg-card p-4 transition-colors ${
+        isDropTarget
+          ? "border-primary ring-2 ring-primary/30"
+          : "border-border"
+      }`}
+    >
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-base font-medium text-card-foreground">
           {title}

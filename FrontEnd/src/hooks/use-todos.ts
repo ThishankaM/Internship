@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { todoApi } from "@/services/todo-api";
 import { ApiError } from "@/services/api-client";
 import type {
@@ -17,6 +17,12 @@ export function useTodos(enabled: boolean = true) {
     data: [],
     meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
   });
+  const dataRef = useRef(data);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   const [params, setParams] = useState<TodoQueryParams>({
     page: 1,
     limit: 100,
@@ -102,11 +108,25 @@ export function useTodos(enabled: boolean = true) {
     async (id: string, payload: UpdateTodoRequest) => {
       setIsSaving(true);
       setMutationError(null);
+
+      // Optimistic update so drag-and-drop (and edits) feel instant.
+      const snapshot = dataRef.current;
+      setData((current) => ({
+        ...current,
+        data: current.data.map((todo) =>
+          todo.id === id ? { ...todo, ...payload } : todo
+        ),
+      }));
+
       try {
         const updated = await todoApi.update(id, payload);
-        await fetchTodos(params);
+        setData((current) => ({
+          ...current,
+          data: current.data.map((todo) => (todo.id === id ? updated : todo)),
+        }));
         return { ok: true as const, data: updated };
       } catch (err) {
+        setData(snapshot);
         const message =
           err instanceof ApiError ? err.message : "Failed to update todo";
         setMutationError(message);
@@ -115,7 +135,7 @@ export function useTodos(enabled: boolean = true) {
         setIsSaving(false);
       }
     },
-    [fetchTodos, params]
+    []
   );
 
   const deleteTodo = useCallback(async (id: string) => {

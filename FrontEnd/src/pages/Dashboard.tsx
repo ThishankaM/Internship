@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
+import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import { KanbanColumn } from "@/components/kanban-column";
 import { ProjectPanel } from "@/components/project-panel";
 import { TaskSidebar } from "@/components/task-sidebar";
+import { TaskCardPreview } from "@/components/TaskCard";
 import { TaskToolbar } from "@/components/task-toolbar";
 import { TodoModal } from "@/components/TodoModal";
 import { OrganizerModal } from "@/components/OrganizerModal";
@@ -11,7 +13,11 @@ import { ErrorState } from "@/components/states/error-state";
 import { useAuth } from "@/providers/auth-context";
 import { useTodos } from "@/hooks/use-todos";
 import { useTaxonomy } from "@/hooks/use-taxonomy";
-import type { CreateTodoRequest, Todo } from "@/types/todo";
+import type { CreateTodoRequest, Todo, TodoStatus } from "@/types/todo";
+
+function isTodoStatus(value: unknown): value is TodoStatus {
+  return value === "todo" || value === "in-progress" || value === "done";
+}
 
 export default function Dashboard() {
   const {
@@ -42,6 +48,7 @@ export default function Dashboard() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
@@ -137,38 +144,79 @@ export default function Dashboard() {
             />
           </div>
         ) : (
-          <div className="flex flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 py-6">
-            <KanbanColumn
-              title="To do List"
-              count={todoList.length}
-              todos={todoList}
-              isLoading={isLoading}
-              deletingId={deletingId}
-              onEdit={openEditModal}
-              onDelete={deleteTodo}
-              onCreate={openCreateModal}
-            />
-            <KanbanColumn
-              title="In Progress"
-              count={inProgressList.length}
-              todos={inProgressList}
-              isLoading={isLoading}
-              deletingId={deletingId}
-              onEdit={openEditModal}
-              onDelete={deleteTodo}
-              onCreate={openCreateModal}
-            />
-            <KanbanColumn
-              title="Done"
-              count={doneList.length}
-              todos={doneList}
-              isLoading={isLoading}
-              deletingId={deletingId}
-              onEdit={openEditModal}
-              onDelete={deleteTodo}
-              onCreate={openCreateModal}
-            />
-          </div>
+          <DragDropProvider
+            onDragStart={(event) => {
+              const draggedId = event.operation.source?.id;
+              setActiveTodo(
+                todos.find((todo) => todo.id === draggedId) ?? null
+              );
+            }}
+            onDragEnd={(event) => {
+              setActiveTodo(null);
+
+              if (event.canceled) return;
+
+              const draggedId = event.operation.source?.id;
+              const draggedTodo =
+                todos.find((todo) => todo.id === draggedId) ?? null;
+              const target = event.operation.target?.id;
+
+              if (
+                !draggedTodo ||
+                !isTodoStatus(target) ||
+                draggedTodo.status === target
+              ) {
+                return;
+              }
+
+              const isDone = target === "done";
+              void updateTodo(draggedTodo.id, {
+                status: target,
+                completed: isDone,
+                ...(isDone ? { progress: 100 } : {}),
+              });
+            }}
+          >
+            <div className="flex flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 py-6">
+              <KanbanColumn
+                status="todo"
+                title="To do List"
+                count={todoList.length}
+                todos={todoList}
+                isLoading={isLoading}
+                deletingId={deletingId}
+                onEdit={openEditModal}
+                onDelete={deleteTodo}
+                onCreate={openCreateModal}
+              />
+              <KanbanColumn
+                status="in-progress"
+                title="In Progress"
+                count={inProgressList.length}
+                todos={inProgressList}
+                isLoading={isLoading}
+                deletingId={deletingId}
+                onEdit={openEditModal}
+                onDelete={deleteTodo}
+                onCreate={openCreateModal}
+              />
+              <KanbanColumn
+                status="done"
+                title="Done"
+                count={doneList.length}
+                todos={doneList}
+                isLoading={isLoading}
+                deletingId={deletingId}
+                onEdit={openEditModal}
+                onDelete={deleteTodo}
+                onCreate={openCreateModal}
+              />
+            </div>
+
+            <DragOverlay>
+              {activeTodo ? <TaskCardPreview todo={activeTodo} /> : null}
+            </DragOverlay>
+          </DragDropProvider>
         )}
       </main>
 

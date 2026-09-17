@@ -1,13 +1,12 @@
+import { useDraggable } from "@dnd-kit/react";
 import { format, isBefore, parseISO, startOfToday } from "date-fns";
-import { Loader2, MessageSquare, MoreHorizontal, Paperclip } from "lucide-react";
+import {
+  Loader2,
+  MessageSquare,
+  MoreHorizontal,
+  Paperclip,
+} from "lucide-react";
 import type { Todo, TodoPriority, TodoStatus } from "@/types/todo";
-
-interface TaskCardProps {
-  todo: Todo;
-  isDeleting?: boolean;
-  onEdit: (todo: Todo) => void;
-  onDelete: (id: string) => void;
-}
 
 const PROGRESS_COLORS: Record<TodoStatus, string> = {
   todo: "bg-muted-foreground/60",
@@ -15,42 +14,70 @@ const PROGRESS_COLORS: Record<TodoStatus, string> = {
   done: "bg-success",
 };
 
-export function TaskCard({
+function getPriorityColor(priority: TodoPriority) {
+  if (priority === "HIGH") return "text-destructive bg-destructive/10";
+  if (priority === "MEDIUM") {
+    return "text-secondary-accent bg-secondary-accent/10";
+  }
+  return "text-primary bg-primary/10";
+}
+
+interface TaskCardBodyProps {
+  todo: Todo;
+  isDeleting?: boolean;
+  isOverlay?: boolean;
+  onEdit: (todo: Todo) => void;
+  onDelete: (id: string) => void;
+}
+
+function TaskCardBody({
   todo,
   isDeleting = false,
+  isOverlay = false,
   onEdit,
   onDelete,
-}: TaskCardProps) {
+}: TaskCardBodyProps) {
   const dueDate = todo.dueDate ? parseISO(todo.dueDate) : null;
   const isOverdue = dueDate
     ? isBefore(dueDate, startOfToday()) && !todo.completed
     : false;
   const formattedDate = dueDate ? format(dueDate, "MMM d, yyyy") : "No Due Date";
 
-  const getPriorityColor = (priority: TodoPriority) => {
-    if (priority === "HIGH") return "text-destructive bg-destructive/10";
-    if (priority === "MEDIUM") {
-      return "text-secondary-accent bg-secondary-accent/10";
-    }
-    return "text-primary bg-primary/10";
-  };
-
   return (
     <div
       className={`mb-4 rounded-xl border border-border bg-card p-4 text-card-foreground transition-opacity ${
         isDeleting ? "pointer-events-none opacity-40" : ""
-      }`}
+      } ${isOverlay ? "rotate-2 shadow-lg" : ""}`}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h4 className="truncate text-sm font-medium text-card-foreground">
-            {todo.title}
-          </h4>
-          {todo.description && (
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-              {todo.description}
-            </p>
-          )}
+        <div className="flex min-w-0 items-start gap-2">
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-medium text-card-foreground">
+              {todo.title}
+            </h4>
+            {todo.description && (
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                {todo.description}
+              </p>
+            )}
+            {(todo.category || (todo.tags && todo.tags.length > 0)) && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {todo.category && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    {todo.category.name}
+                  </span>
+                )}
+                {todo.tags?.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                  >
+                    #{tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 items-start gap-2">
           <span
@@ -60,7 +87,7 @@ export function TaskCard({
           </span>
           {isDeleting ? (
             <Loader2 size={16} className="animate-spin text-muted-foreground" />
-          ) : (
+          ) : isOverlay ? null : (
             <details className="relative">
               <summary className="list-none cursor-pointer text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
                 <MoreHorizontal size={16} />
@@ -118,24 +145,52 @@ export function TaskCard({
           </span>
         </div>
       </div>
-
-      {(todo.category || (todo.tags && todo.tags.length > 0)) && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {todo.category && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
-              {todo.category.name}
-            </span>
-          )}
-          {todo.tags?.map((tag) => (
-            <span
-              key={tag.id}
-              className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
-            >
-              #{tag.name}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
+  );
+}
+
+interface TaskCardProps {
+  todo: Todo;
+  isDeleting?: boolean;
+  onEdit: (todo: Todo) => void;
+  onDelete: (id: string) => void;
+}
+
+export function TaskCard({
+  todo,
+  isDeleting = false,
+  onEdit,
+  onDelete,
+}: TaskCardProps) {
+  const { ref, handleRef, isDragging } = useDraggable({
+    id: todo.id,
+    data: { status: todo.status },
+  });
+
+  return (
+    <div
+      ref={ref}
+      {...handleRef}
+      className={isDragging ? "cursor-grabbing opacity-40" : "cursor-grab"}
+    >
+      <TaskCardBody
+        todo={todo}
+        isDeleting={isDeleting}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+}
+
+/** Presentational card used by the drag overlay (no drag/drop hooks). */
+export function TaskCardPreview({ todo }: { todo: Todo }) {
+  return (
+    <TaskCardBody
+      todo={todo}
+      isOverlay
+      onEdit={() => {}}
+      onDelete={() => {}}
+    />
   );
 }

@@ -16,6 +16,7 @@ export class TodosService {
 
   async create(createTodoDto: CreateTodoDto, userId: string) {
     const { categoryId, tagIds, ...rest } = createTodoDto;
+    if (rest.status === 'done') rest.progress = 100;
 
     await this.validateRelations(categoryId, tagIds, userId);
 
@@ -97,6 +98,7 @@ export class TodosService {
     await this.findOne(id, userId);
 
     const { categoryId, tagIds, ...rest } = updateTodoDto;
+    if (rest.status === 'done') rest.progress = 100;
 
     await this.validateRelations(categoryId, tagIds, userId);
 
