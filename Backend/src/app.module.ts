@@ -4,6 +4,10 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TodosModule } from './todos/todos.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { CategoriesModule } from './categories/categories.module.js';
+import { TagsModule } from './tags/tags.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { AdminController } from './admin/admin.controller.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -13,8 +17,6 @@ export const isObserveEnabled = Boolean(observeAppKey && observeAppSecret);
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
     ...(isObserveEnabled
       ? [
           ObserveModule.forRoot({
@@ -24,10 +26,13 @@ export const isObserveEnabled = Boolean(observeAppKey && observeAppSecret);
           }),
         ]
       : []),
+    PrismaModule,
     TodosModule,
     AuthModule,
+    CategoriesModule,
+    TagsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, AdminController],
   providers: [AppService],
 })
 export class AppModule {}

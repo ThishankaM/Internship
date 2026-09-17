@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsIn,
   IsDateString,
+  IsArray,
 } from 'class-validator';
 
 export class CreateTodoDto {
@@ -47,4 +48,14 @@ export class CreateTodoDto {
   @IsNumber()
   @IsOptional()
   attachments?: number;
+
+  // Relations
+  @IsString()
+  @IsOptional()
+  categoryId?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tagIds?: string[];
 }

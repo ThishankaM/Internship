@@ -4,12 +4,19 @@ interface NavItemProps {
   icon: LucideIcon;
   label: string;
   active?: boolean;
+  onClick?: () => void;
 }
 
-export function NavItem({ icon: Icon, label, active = false }: NavItemProps) {
+export function NavItem({
+  icon: Icon,
+  label,
+  active = false,
+  onClick,
+}: NavItemProps) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         active
           ? "bg-primary/10 text-primary"

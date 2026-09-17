@@ -6,6 +6,12 @@ export class QueryTodoDto {
   @IsOptional() @IsString()
   search?: string;
 
+  @IsOptional() @IsString()
+  categoryId?: string;
+
+  @IsOptional() @IsString()
+  tagId?: string;
+
   @IsOptional() @IsIn(['all', 'active', 'completed'])
   filter?: 'all' | 'active' | 'completed';
 

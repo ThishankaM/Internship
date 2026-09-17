@@ -11,18 +11,26 @@ export class TodosService {
   constructor(private prisma: PrismaService) {}
 
   async create(createTodoDto: CreateTodoDto, userId: string) {
+    const { categoryId, tagIds, ...rest } = createTodoDto;
+
     return this.prisma.todo.create({
       data: {
-        ...createTodoDto,
-        description: createTodoDto.description || '',
+        ...rest,
         userId,
+        categoryId: categoryId ?? null,
+        tags: tagIds?.length
+          ? { connect: tagIds.map((tagId) => ({ id: tagId })) }
+          : undefined,
       },
+      include: { category: true, tags: true },
     });
   }
 
   async findAll(userId: string, query: QueryTodoDto) {
     const {
       search,
+      categoryId,
+      tagId,
       filter = 'all',
       sortBy = 'created_at',
       sortOrder = 'desc',
@@ -31,6 +39,9 @@ export class TodosService {
     } = query;
 
     const where: Prisma.TodoWhereInput = { userId };
+
+    if (categoryId) where.categoryId = categoryId;
+    if (tagId) where.tags = { some: { id: tagId } };
 
     if (search) {
       where.OR = [
@@ -51,6 +62,7 @@ export class TodosService {
         orderBy,
         skip,
         take: limit,
+        include: { category: true, tags: true },
       }),
       this.prisma.todo.count({ where }),
     ]);
@@ -67,14 +79,30 @@ export class TodosService {
   }
 
   async findOne(id: string, userId: string) {
-    const todo = await this.prisma.todo.findFirst({ where: { id, userId } });
+    const todo = await this.prisma.todo.findFirst({
+      where: { id, userId },
+      include: { category: true, tags: true },
+    });
     if (!todo) throw new NotFoundException('Todo not found');
     return todo;
   }
 
   async update(id: string, updateTodoDto: UpdateTodoDto, userId: string) {
     await this.findOne(id, userId);
-    return this.prisma.todo.update({ where: { id }, data: updateTodoDto });
+
+    const { categoryId, tagIds, ...rest } = updateTodoDto;
+
+    return this.prisma.todo.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(categoryId !== undefined ? { categoryId } : {}),
+        ...(tagIds !== undefined
+          ? { tags: { set: tagIds.map((tagId) => ({ id: tagId })) } }
+          : {}),
+      },
+      include: { category: true, tags: true },
+    });
   }
 
   async remove(id: string, userId: string) {

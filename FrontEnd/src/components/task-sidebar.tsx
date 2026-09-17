@@ -6,8 +6,10 @@ import {
   Clock,
   LogOut,
   Settings,
+  Shield,
   Sun,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { NavItem } from "@/components/nav-item";
 import type { User } from "@/types/auth";
 
@@ -17,6 +19,8 @@ interface TaskSidebarProps {
 }
 
 export function TaskSidebar({ user, onLogout }: TaskSidebarProps) {
+  const navigate = useNavigate();
+
   return (
     <aside className="hidden w-64 flex-col border-r border-border bg-sidebar md:flex">
       <div className="flex h-16 items-center gap-2 px-6 font-semibold text-foreground">
@@ -28,6 +32,13 @@ export function TaskSidebar({ user, onLogout }: TaskSidebarProps) {
         <NavItem icon={Briefcase} label="Projects" />
         <NavItem icon={Clock} label="Schedule" />
         <NavItem icon={Sun} label="My Day" />
+        {user?.role === "ADMIN" && (
+          <NavItem
+            icon={Shield}
+            label="Admin"
+            onClick={() => navigate("/admin")}
+          />
+        )}
       </nav>
       <div className="mt-auto border-t border-border p-4">
         {user && (

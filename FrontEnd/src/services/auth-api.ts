@@ -13,6 +13,9 @@ export const authApi = {
       auth: false,
     });
     tokenStorage.set(res.access_token);
+    if (res.refresh_token) {
+      tokenStorage.setRefresh(res.refresh_token);
+    }
     return res;
   },
 
@@ -21,6 +24,9 @@ export const authApi = {
       auth: false,
     });
     tokenStorage.set(res.access_token);
+    if (res.refresh_token) {
+      tokenStorage.setRefresh(res.refresh_token);
+    }
     return res;
   },
 
