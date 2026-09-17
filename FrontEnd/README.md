@@ -61,6 +61,9 @@ Make sure the backend CORS configuration allows the Vite development server orig
 | `npm run build`    | Type-check and create a production build  |
 | `npm run lint`     | Run ESLint                                |
 | `npm run preview`  | Preview the production build              |
+| `npm test`         | Run frontend unit/component tests         |
+| `npm run test:watch` | Run frontend tests in watch mode        |
+| `npm run test:cov` | Run frontend tests with coverage          |
 
 ## API Integration
 
