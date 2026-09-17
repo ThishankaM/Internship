@@ -15,16 +15,49 @@ enum Priority {
   HIGH
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id         String   @id @default(uuid())
   name       String
   email      String   @unique
   password   String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
   todos      Todo[]   // Relation to Todos
+  refreshToken String?  // Hashed refresh token
+  categories   Category[]
+  tags         Tag[]
   
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+// Phase 07: One-to-Many Relationship
+model Category {
+  id         String   @id @default(uuid())
+  name       String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  todos      Todo[]
+
+  created_at DateTime @default(now())
+}
+
+// Phase 07: Many-to-Many Relationship
+model Tag {
+  id         String   @id @default(uuid())
+  name       String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  todos      Todo[]   // Prisma handles implicit M:N join table
+
+  created_at DateTime @default(now())
+}
+
 
 model Todo {
   id          String   @id @default(uuid())
@@ -38,9 +71,15 @@ model Todo {
   comments    Int      @default(0)
   attachments Int      @default(0)
 
-  // Link to User
+  // Foreign Keys
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  // Many-to-Many
+  tags        Tag[]
 
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
