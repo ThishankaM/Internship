@@ -3,8 +3,10 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
+/*noinspection CssUnknownAtRule*/
 @custom-variant dark (&:is(.dark *));
 
+/*noinspection CssUnknownAtRule*/
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
@@ -54,46 +56,48 @@
 }
 
 :root {
-    --background: #000000;
-    --foreground: #FFFFFF;
-    --card: #050505;
-    --card-foreground: #FFFFFF;
-    --popover: #353535;
-    --popover-foreground: #FFFFFF;
+    color-scheme: light;
+    --background: #FFFFFF;
+    --foreground: #111111;
+    --card: #FFFFFF;
+    --card-foreground: #111111;
+    --popover: #FFFFFF;
+    --popover-foreground: #111111;
     --primary: #8A73FF;
     --primary-foreground: #FFFFFF;
     --primary-hover: #967FFF;
     --soft-violet: #DCD6FF;
-    --secondary: #353535;
-    --secondary-foreground: #FFFFFF;
+    --secondary: #F1F1F4;
+    --secondary-foreground: #1A1A1A;
     --secondary-accent: #FF8A5B;
     --secondary-accent-soft: #FFDCCB;
-    --muted: #242424;
-    --muted-foreground: #777777;
-    --accent: #3B3B3B;
-    --accent-foreground: #FFFFFF;
-    --destructive: #FF5C5C;
-    --success: #32D6A0;
-    --border: #242424;
-    --input: #242424;
+    --muted: #F1F1F4;
+    --muted-foreground: #6B6B6B;
+    --accent: #EFEFF3;
+    --accent-foreground: #111111;
+    --destructive: #E5484D;
+    --success: #12A575;
+    --border: #E4E4E7;
+    --input: #E4E4E7;
     --ring: #8A73FF;
     --chart-1: #8A73FF;
     --chart-2: #FF8A5B;
-    --chart-3: #32D6A0;
-    --chart-4: #FF5C5C;
+    --chart-3: #12A575;
+    --chart-4: #E5484D;
     --chart-5: #967FFF;
     --radius: 0.625rem;
-    --sidebar: #050505;
-    --sidebar-foreground: #FFFFFF;
+    --sidebar: #F7F7F9;
+    --sidebar-foreground: #111111;
     --sidebar-primary: #8A73FF;
     --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #3B3B3B;
-    --sidebar-accent-foreground: #FFFFFF;
-    --sidebar-border: #242424;
+    --sidebar-accent: #EFEFF3;
+    --sidebar-accent-foreground: #111111;
+    --sidebar-border: #E4E4E7;
     --sidebar-ring: #8A73FF;
 }
 
 .dark {
+    color-scheme: dark;
     --background: #000000;
     --foreground: #FFFFFF;
     --card: #050505;
@@ -134,12 +138,15 @@
 
 @layer base {
   * {
+    /*noinspection CssUnknownAtRule*/
     @apply border-border outline-ring/50;
     }
   body {
+    /*noinspection CssUnknownAtRule*/
     @apply bg-background text-foreground;
     }
   html {
+    /*noinspection CssUnknownAtRule*/
     @apply font-sans;
     }
 }

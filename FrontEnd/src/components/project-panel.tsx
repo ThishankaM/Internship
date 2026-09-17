@@ -1,11 +1,13 @@
 import React from "react";
-import { HelpCircle, Info, Radio, Sun} from "lucide-react";
+import { HelpCircle, Info, Moon, Radio, Sun } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { MiniProjectCard } from "@/components/mini-project-card";
-
+import { useTheme } from "@/hooks/use-theme";
 
 export function ProjectPanel() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const { isDark, toggleTheme } = useTheme();
+
   return (
     <aside className="hidden w-80 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
       <div className="flex items-center gap-3">
@@ -47,8 +49,9 @@ export function ProjectPanel() {
           type="button"
           className="flex items-center gap-1.5"
           aria-label="Theme"
+          onClick={toggleTheme}
         >
-          <Sun className="size-4" /> Theme
+          {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />} Theme
         </button>
         <button
           type="button"

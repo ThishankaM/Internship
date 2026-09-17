@@ -40,38 +40,38 @@ export function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
-      <div className="bg-[#1A1A1A] p-8 rounded-2xl w-full max-w-md border border-[#333]">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8">
+        <h2 className="mb-6 text-center text-2xl font-bold text-card-foreground">
           {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
         
-        {error && <div className="bg-red-500/10 text-red-500 p-3 rounded mb-4 text-sm">{error}</div>}
+        {error && <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="text-sm text-gray-400">Name</label>
-              <Input required value={name} onChange={(e) => setName(e.target.value)} className="bg-[#242424] border-[#333] text-white" />
+              <label className="text-sm text-muted-foreground">Name</label>
+              <Input required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           )}
           <div>
-            <label className="text-sm text-gray-400">Email</label>
-            <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-[#242424] border-[#333] text-white" />
+            <label className="text-sm text-muted-foreground">Email</label>
+            <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <label className="text-sm text-gray-400">Password</label>
-            <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="bg-[#242424] border-[#333] text-white" />
+            <label className="text-sm text-muted-foreground">Password</label>
+            <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           
-          <Button type="submit" className="w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white">
+          <Button type="submit" className="w-full">
             {isLogin ? "Login" : "Register"}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-4">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => setIsLogin(!isLogin)} className="text-[#8B5CF6] hover:underline">
+          <button onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
             {isLogin ? "Sign up" : "Login"}
           </button>
         </p>
