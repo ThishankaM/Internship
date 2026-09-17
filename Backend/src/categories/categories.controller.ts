@@ -21,6 +21,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthenticatedRequest } from '../auth/authenticated-request.js';
 import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto.js';
+import { CategoryResponseDto } from '../common/dto/responses.dto.js';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
@@ -31,6 +32,7 @@ export class CategoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a category' })
+  @ApiResponse({ status: 201, type: CategoryResponseDto })
   create(
     @Body() createCategoryDto: CreateCategoryDto,
     @Request() req: AuthenticatedRequest,
@@ -40,12 +42,14 @@ export class CategoriesController {
 
   @Get()
   @ApiOperation({ summary: 'List categories for the authenticated user' })
+  @ApiResponse({ status: 200, type: [CategoryResponseDto] })
   findAll(@Request() req: AuthenticatedRequest) {
     return this.categoriesService.findAll(req.user.id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category' })
+  @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   update(
     @Param('id') id: string,
@@ -57,6 +61,7 @@ export class CategoriesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a category' })
+  @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.categoriesService.remove(id, req.user.id);

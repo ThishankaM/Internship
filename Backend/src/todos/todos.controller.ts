@@ -13,6 +13,10 @@ import { QueryTodoDto } from './dto/query-todo.dto.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthenticatedRequest } from '../auth/authenticated-request.js';
 import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto.js';
+import {
+  PaginatedTodosResponseDto,
+  TodoResponseDto,
+} from '../common/dto/responses.dto.js';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
@@ -23,7 +27,7 @@ export class TodosController {
 
   @Post()
   @ApiOperation({ summary: 'Create a todo' })
-  @ApiResponse({ status: 201, description: 'Todo created' })
+  @ApiResponse({ status: 201, type: TodoResponseDto })
   @ApiResponse({ status: 400, type: ApiErrorResponseDto })
   create(@Body() createTodoDto: CreateTodoDto, @Request() req: AuthenticatedRequest) {
     return this.todosService.create(createTodoDto, req.user.id);
@@ -31,12 +35,14 @@ export class TodosController {
 
   @Get()
   @ApiOperation({ summary: 'List todos for the authenticated user' })
+  @ApiResponse({ status: 200, type: PaginatedTodosResponseDto })
   findAll(@Query() query: QueryTodoDto, @Request() req: AuthenticatedRequest) {
     return this.todosService.findAll(req.user.id, query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get one todo' })
+  @ApiResponse({ status: 200, type: TodoResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.todosService.findOne(id, req.user.id);
@@ -44,6 +50,7 @@ export class TodosController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a todo' })
+  @ApiResponse({ status: 200, type: TodoResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   update(@Param('id') id: string, @Body() updateTodoDto: UpdateTodoDto, @Request() req: AuthenticatedRequest) {
     return this.todosService.update(id, updateTodoDto, req.user.id);
@@ -51,6 +58,7 @@ export class TodosController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a todo' })
+  @ApiResponse({ status: 200, type: TodoResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.todosService.remove(id, req.user.id);

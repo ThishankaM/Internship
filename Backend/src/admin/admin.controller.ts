@@ -19,6 +19,10 @@ import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto.js';
 import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto.js';
+import {
+  AdminStatsResponseDto,
+  UserResponseDto,
+} from '../common/dto/responses.dto.js';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('ADMIN') // ONLY admins can access this controller!
@@ -30,6 +34,7 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'List users with todo counts' })
+  @ApiResponse({ status: 200, type: [UserResponseDto] })
   getUsers() {
     return this.prisma.user.findMany({
       select: {
@@ -46,6 +51,7 @@ export class AdminController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get basic platform statistics' })
+  @ApiResponse({ status: 200, type: AdminStatsResponseDto })
   async getStats() {
     const [users, todos, completedTodos] = await Promise.all([
       this.prisma.user.count(),
@@ -63,6 +69,7 @@ export class AdminController {
 
   @Patch('users/:id/role')
   @ApiOperation({ summary: 'Update a user role' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   async updateUserRole(
     @Param('id') id: string,
@@ -80,6 +87,7 @@ export class AdminController {
 
   @Patch('users/:id/toggle-active')
   @ApiOperation({ summary: 'Enable or disable a user' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   async toggleUser(@Param('id') id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });

@@ -21,6 +21,7 @@ import { UpdateTagDto } from './dto/update-tag.dto.js';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthenticatedRequest } from '../auth/authenticated-request.js';
 import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto.js';
+import { TagResponseDto } from '../common/dto/responses.dto.js';
 
 @UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth('access-token')
@@ -31,18 +32,21 @@ export class TagsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a tag' })
+  @ApiResponse({ status: 201, type: TagResponseDto })
   create(@Body() createTagDto: CreateTagDto, @Request() req: AuthenticatedRequest) {
     return this.tagsService.create(createTagDto, req.user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List tags for the authenticated user' })
+  @ApiResponse({ status: 200, type: [TagResponseDto] })
   findAll(@Request() req: AuthenticatedRequest) {
     return this.tagsService.findAll(req.user.id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a tag' })
+  @ApiResponse({ status: 200, type: TagResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   update(
     @Param('id') id: string,
@@ -54,6 +58,7 @@ export class TagsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a tag' })
+  @ApiResponse({ status: 200, type: TagResponseDto })
   @ApiResponse({ status: 404, type: ApiErrorResponseDto })
   remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.tagsService.remove(id, req.user.id);
