@@ -71,6 +71,7 @@ function SelectContent({ className, children, ...props }: SelectContentProps) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
+        className="z-[100]"
         sideOffset={6}
         align="start"
         alignItemWithTrigger={false}
@@ -78,7 +79,7 @@ function SelectContent({ className, children, ...props }: SelectContentProps) {
         <SelectPrimitive.Popup
           data-slot="select-content"
           className={cn(
-            "z-50 max-h-72 min-w-[8rem] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
+            "z-50 max-h-72 min-w-[8rem] overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 outline-none",
             className
           )}
           {...props}
