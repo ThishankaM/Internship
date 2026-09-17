@@ -36,6 +36,7 @@ The frontend for TaskFlow, a dark-themed Kanban todo application. It is built wi
 ```powershell
 cd FrontEnd
 npm install
+Copy-Item .env.example .env
 npm run dev
 ```
 
@@ -48,7 +49,7 @@ http://localhost:5173
 The frontend expects the backend API to be available at:
 
 ```text
-http://localhost:3000/todos
+http://localhost:3000/api/v1
 ```
 
 Make sure the backend CORS configuration allows the Vite development server origin.
@@ -67,20 +68,23 @@ Make sure the backend CORS configuration allows the Vite development server orig
 
 ## API Integration
 
-The API base URL is defined in `src/App.tsx`:
+The API base URL is read from `VITE_API_BASE_URL` in `src/services/api-client.ts`:
 
 ```ts
-const API_URL = "http://localhost:3000/todos";
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
 ```
 
 The UI uses these endpoints:
 
 | Method | Endpoint     | Purpose        |
 | ------ | ------------ | -------------- |
-| GET    | `/todos`     | List all todos |
-| POST   | `/todos`     | Create a todo  |
-| PATCH  | `/todos/:id` | Update a todo  |
-| DELETE | `/todos/:id` | Delete a todo  |
+| GET    | `/api/v1/todos`     | List all todos |
+| POST   | `/api/v1/todos`     | Create a todo  |
+| PATCH  | `/api/v1/todos/:id` | Update a todo  |
+| DELETE | `/api/v1/todos/:id` | Delete a todo  |
+
+Authentication, categories, tags, and admin endpoints are also available under `/api/v1`. Swagger documentation is available at `http://localhost:3000/api/docs`.
 
 The frontend groups todos into columns using the `status` field:
 

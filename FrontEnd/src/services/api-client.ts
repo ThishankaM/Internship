@@ -1,7 +1,8 @@
 import { tokenStorage } from "@/lib/token-storage";
 import type { ApiErrorShape } from "@/types/api";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1";
 
 /** Custom error so components/hooks can inspect status codes. */
 export class ApiError extends Error {

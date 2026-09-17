@@ -1,4 +1,12 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -8,6 +16,11 @@ import { CategoriesModule } from './categories/categories.module.js';
 import { TagsModule } from './tags/tags.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AdminController } from './admin/admin.controller.js';
+import configuration, {
+  validateEnvironment,
+} from './config/configuration.js';
+import { JsonLoggerService } from './common/logging/json-logger.service.js';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -17,6 +30,24 @@ export const isObserveEnabled = Boolean(observeAppKey && observeAppSecret);
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      load: [configuration],
+      validate: validateEnvironment,
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: configService.get<number>('throttle.ttlMs', 60000),
+            limit: configService.get<number>('throttle.limit', 100),
+          },
+        ],
+      }),
+    }),
     ...(isObserveEnabled
       ? [
           ObserveModule.forRoot({
@@ -33,6 +64,19 @@ export const isObserveEnabled = Boolean(observeAppKey && observeAppSecret);
     TagsModule,
   ],
   controllers: [AppController, AdminController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JsonLoggerService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(RequestLoggerMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

@@ -5,8 +5,10 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
+import type { JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes, createHash } from 'crypto';
 import {
@@ -22,6 +24,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -30,7 +33,10 @@ export class AuthService {
     });
     if (existingUser) throw new ConflictException('Email already exists');
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(
+      dto.password,
+      this.configService.get<number>('bcryptRounds', 10),
+    );
     const user = await this.prisma.user.create({
       data: {
         name: dto.name,
@@ -44,7 +50,9 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user || !user.isActive) throw new UnauthorizedException('Access denied');
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     const isValid = await bcrypt.compare(dto.password, user.password);
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
@@ -101,7 +109,10 @@ export class AuthService {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(
+      dto.newPassword,
+      this.configService.get<number>('bcryptRounds', 10),
+    );
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -128,7 +139,12 @@ export class AuthService {
 
     const resetToken = randomBytes(32).toString('hex');
     const hashedResetToken = this.hashToken(resetToken);
-    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const resetTokenExpiresAt = new Date(
+      Date.now() +
+        this.configService.get<number>('jwt.resetExpiresInMinutes', 15) *
+          60 *
+          1000,
+    );
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -161,7 +177,10 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired password reset token');
     }
 
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(
+      dto.newPassword,
+      this.configService.get<number>('bcryptRounds', 10),
+    );
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -178,11 +197,30 @@ export class AuthService {
 
   private async generateTokens(userId: string, email: string, role: string) {
     const [at, rt] = await Promise.all([
-      this.jwtService.signAsync({ sub: userId, email, role }, { expiresIn: '15m' }),
-      this.jwtService.signAsync({ sub: userId, email, role }, { expiresIn: '7d' }),
+      this.jwtService.signAsync(
+        { sub: userId, email, role },
+        {
+          expiresIn: this.configService.get<string>(
+            'jwt.accessExpiresIn',
+            '15m',
+          ) as JwtSignOptions['expiresIn'],
+        },
+      ),
+      this.jwtService.signAsync(
+        { sub: userId, email, role },
+        {
+          expiresIn: this.configService.get<string>(
+            'jwt.refreshExpiresIn',
+            '7d',
+          ) as JwtSignOptions['expiresIn'],
+        },
+      ),
     ]);
 
-    const hashedRt = await bcrypt.hash(rt, 10);
+    const hashedRt = await bcrypt.hash(
+      rt,
+      this.configService.get<number>('bcryptRounds', 10),
+    );
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: hashedRt },

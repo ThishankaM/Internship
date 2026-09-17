@@ -1,272 +1,34 @@
 # TaskFlow Backend
 
-The backend for TaskFlow, a NestJS REST API that stores todos in PostgreSQL using Prisma.
+NestJS REST API for the TaskFlow todo application. It stores data in PostgreSQL through Prisma and provides authentication, authorization, todos, categories, tags, and admin APIs.
 
-## Features
-
-- CRUD API for todos
-- Categories and tags APIs with user-scoped authorization
-- PostgreSQL persistence through Prisma
-- DTO validation with `class-validator`
-- Global request validation with `whitelist` and `transform`
-- CORS configured for the TaskFlow frontend
-- JWT authentication, refresh tokens, roles, and admin endpoints
-- Change, forgot, and reset password flows
-- Optional NestJS Observe instrumentation
-- Unit and e2e test setup with Vitest
-
-## Tech Stack
+## Technologies
 
 - NestJS 12
 - TypeScript
 - Prisma 5
 - PostgreSQL
+- JWT and Passport
+- bcrypt
 - class-validator and class-transformer
-- Vitest
+- Swagger/OpenAPI
+- Helmet and rate limiting
+- Vitest and Supertest
 
-## Prerequisites
+## Features
 
-- Node.js
-- npm
-- PostgreSQL running locally or remotely
-
-## Setup
-
-```powershell
-cd Backend
-npm install
-```
-
-Create the environment file:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Set the PostgreSQL connection string in `.env`:
-
-```dotenv
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/todo_db?schema=public"
-```
-
-## Database Setup
-
-Generate the Prisma client:
-
-```powershell
-npx prisma generate
-```
-
-Apply the existing migration:
-
-```powershell
-npx prisma migrate dev
-```
-
-For a deployed or non-development environment:
-
-```powershell
-npx prisma migrate deploy
-```
-
-## Running the Server
-
-```powershell
-npm run start:dev
-```
-
-The API starts at:
-
-```text
-http://localhost:3000
-```
-
-The root endpoint returns `Hello World!` and the todo endpoints are under `/todos`.
-
-## Scripts
-
-| Script             | Description                                   |
-| ------------------ | --------------------------------------------- |
-| `npm run start`    | Start the NestJS server                       |
-| `npm run start:dev`| Start the server in watch mode                |
-| `npm run start:debug` | Start the server in debug watch mode       |
-| `npm run start:prod` | Run the production build from `dist`        |
-| `npm run build`    | Build the backend                             |
-| `npm run lint`     | Run oxlint                                    |
-| `npm run test`     | Run unit tests with Vitest                    |
-| `npm run test:e2e` | Run end-to-end tests                          |
-| `npm run test:cov` | Run tests with coverage                       |
-
-## API Reference
-
-Base URL:
-
-```text
-http://localhost:3000
-```
-
-### Todo endpoints
-
-| Method | Endpoint     | Description         |
-| ------ | ------------ | ------------------- |
-| GET    | `/todos`     | List all todos      |
-| POST   | `/todos`     | Create a todo       |
-| GET    | `/todos/:id` | Get one todo by ID  |
-| PATCH  | `/todos/:id` | Update a todo       |
-| DELETE | `/todos/:id` | Delete a todo       |
-
-### Auth endpoints
-
-| Method | Endpoint                    | Description                              |
-| ------ | --------------------------- | ---------------------------------------- |
-| POST   | `/auth/register`            | Register a user                          |
-| POST   | `/auth/login`               | Login and return tokens                  |
-| POST   | `/auth/refresh`             | Refresh an access token                  |
-| GET    | `/auth/me`                  | Get the authenticated user               |
-| POST   | `/auth/change-password`     | Change the authenticated user's password |
-| POST   | `/auth/forgot-password`     | Simulated forgot-password flow           |
-| POST   | `/auth/reset-password`      | Reset password with a token              |
-
-### Category endpoints
-
-| Method | Endpoint           | Description                |
-| ------ | ------------------ | -------------------------- |
-| GET    | `/categories`      | List the user's categories |
-| POST   | `/categories`      | Create a category          |
-| PATCH  | `/categories/:id`  | Update a category          |
-| DELETE | `/categories/:id`  | Delete a category          |
-
-### Tag endpoints
-
-| Method | Endpoint      | Description          |
-| ------ | ------------- | -------------------- |
-| GET    | `/tags`       | List the user's tags |
-| POST   | `/tags`       | Create a tag         |
-| PATCH  | `/tags/:id`   | Update a tag         |
-| DELETE | `/tags/:id`   | Delete a tag         |
-
-### Admin endpoints
-
-| Method | Endpoint                          | Description                  |
-| ------ | --------------------------------- | ---------------------------- |
-| GET    | `/admin/users`                    | List users and todo counts   |
-| GET    | `/admin/stats`                    | Basic todo statistics        |
-| PATCH  | `/admin/users/:id/toggle-active`  | Enable or disable a user     |
-| PATCH  | `/admin/users/:id/role`           | Change a user's role         |
-
-### Create Todo
-
-```http
-POST /todos
-Content-Type: application/json
-```
-
-```json
-{
-  "title": "Design landing page",
-  "description": "Create the initial landing page layout",
-  "status": "todo",
-  "completed": false,
-  "progress": 0,
-  "dueDate": "2026-09-20",
-  "comments": 0,
-  "attachments": 0
-}
-```
-
-Only `title` is required. Other fields are optional and have defaults.
-
-### Update Todo
-
-```http
-PATCH /todos/:id
-Content-Type: application/json
-```
-
-```json
-{
-  "title": "Design updated landing page",
-  "status": "in-progress",
-  "progress": 40
-}
-```
-
-When status is updated, the backend also syncs the `completed` flag:
-
-- `done` sets `completed` to `true`
-- `todo` or `in-progress` sets `completed` to `false`
-
-### Example Response
-
-```json
-{
-  "id": "7a7e5e43-5a22-4f16-9f52-219b04f935df",
-  "title": "Design landing page",
-  "description": "Create the initial landing page layout",
-  "completed": false,
-  "status": "todo",
-  "progress": 0,
-  "dueDate": "2026-09-20",
-  "comments": 0,
-  "attachments": 0,
-  "created_at": "2026-09-16T10:00:00.000Z",
-  "updated_at": "2026-09-16T10:00:00.000Z"
-}
-```
-
-## Validation
-
-The application uses a global `ValidationPipe`:
-
-```ts
-new ValidationPipe({
-  whitelist: true,
-  transform: true,
-});
-```
-
-`CreateTodoDto` enforces:
-
-- `title` is a non-empty string
-- `description` is an optional string
-- `completed` is an optional boolean
-- `status` is one of `todo`, `in-progress`, or `done`
-- `progress`, `comments`, and `attachments` are optional numbers
-
-## CORS
-
-CORS is enabled in `src/main.ts` for:
-
-```text
-http://localhost:5173
-http://127.0.0.1:5173
-```
-
-Allowed methods are:
-
-```text
-GET, POST, PATCH, DELETE
-```
-
-## Database Schema
-
-The Prisma schema is defined in `prisma/schema.prisma`.
-
-The `Todo` model contains:
-
-| Field         | Type       | Default       |
-| ------------- | ---------- | ------------- |
-| `id`          | String/UUID | auto UUID     |
-| `title`       | String     | required      |
-| `description` | String?    | null          |
-| `completed`   | Boolean    | false         |
-| `status`      | String     | `todo`        |
-| `progress`    | Int        | 0             |
-| `dueDate`     | String?    | null          |
-| `comments`    | Int        | 0             |
-| `attachments` | Int        | 0             |
-| `created_at`  | DateTime   | now           |
-| `updated_at`  | DateTime   | auto-updated  |
+- Versioned REST API under `/api/v1`
+- JWT access and refresh tokens
+- USER and ADMIN roles
+- Password change, forgot password, and reset password flows
+- Todo CRUD with filtering, sorting, and pagination
+- Category and tag management
+- User-scoped ownership checks
+- Global validation and consistent error responses
+- Environment-based configuration
+- Structured JSON request/error logging
+- Rate limiting and security headers
+- Swagger/OpenAPI documentation
 
 ## Project Structure
 
@@ -276,25 +38,188 @@ Backend/
     migrations/
     schema.prisma
   src/
-    prisma/
-      prisma.service.ts
-    todos/
+    admin/
+    auth/
+    categories/
+    common/
       dto/
-        create-todo.dto.ts
-        update-todo.dto.ts
-      entities/
-        todo.entity.ts
-      todos.controller.ts
-      todos.module.ts
-      todos.service.ts
-    app.controller.ts
+      filters/
+      logging/
+      middleware/
+    config/
+    prisma/
+    tags/
+    todos/
     app.module.ts
-    app.service.ts
     main.ts
   test/
-  package.json
 ```
 
-## Observability
+## Prerequisites
 
-If `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` are set, the NestJS Observe module is enabled with the service ID `todo-backend`. Without those variables, the app starts normally without Observe instrumentation.
+- Node.js
+- npm
+- PostgreSQL
+
+## Environment Variables
+
+Create `.env` from `.env.example`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NODE_ENV` | No | `development`, `test`, or `production` |
+| `PORT` | No | API port, default `3000` |
+| `CORS_ORIGINS` | No | Comma-separated allowed frontend origins |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Production | Secret used to sign JWTs |
+| `JWT_ACCESS_EXPIRES_IN` | No | Access token lifetime, default `15m` |
+| `JWT_REFRESH_EXPIRES_IN` | No | Refresh token lifetime, default `7d` |
+| `JWT_RESET_EXPIRES_MINUTES` | No | Reset token lifetime, default `15` |
+| `BCRYPT_ROUNDS` | No | Password hashing rounds, default `10` |
+| `THROTTLE_TTL_MS` | No | Rate limit window in milliseconds, default `60000` |
+| `THROTTLE_LIMIT` | No | Requests allowed per window, default `100` |
+| `OBSERVE_APP_KEY` | No | Enables NestJS Observe when paired with secret |
+| `OBSERVE_APP_SECRET` | No | NestJS Observe secret |
+
+In production, `JWT_SECRET` is required and must be at least 32 characters long.
+
+## Database Setup
+
+Set `DATABASE_URL` in `.env`, then run:
+
+```powershell
+npx prisma generate
+npx prisma migrate dev
+```
+
+Production migration:
+
+```powershell
+npx prisma migrate deploy
+```
+
+## Run the Backend
+
+```powershell
+npm install
+npm run start:dev
+```
+
+API base URL:
+
+```text
+http://localhost:3000/api/v1
+```
+
+Swagger documentation:
+
+```text
+http://localhost:3000/api/docs
+```
+
+## API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/v1/auth/register` | Register a user |
+| POST | `/api/v1/auth/login` | Log in |
+| POST | `/api/v1/auth/refresh` | Refresh access token |
+| GET | `/api/v1/auth/me` | Get current user |
+| POST | `/api/v1/auth/change-password` | Change password |
+| POST | `/api/v1/auth/forgot-password` | Start simulated reset flow |
+| POST | `/api/v1/auth/reset-password` | Reset password |
+
+### Todos
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/v1/todos` | List/filter todos |
+| POST | `/api/v1/todos` | Create a todo |
+| GET | `/api/v1/todos/:id` | Get one todo |
+| PATCH | `/api/v1/todos/:id` | Update a todo |
+| DELETE | `/api/v1/todos/:id` | Delete a todo |
+
+### Categories and Tags
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/v1/categories` | List categories |
+| POST | `/api/v1/categories` | Create category |
+| PATCH | `/api/v1/categories/:id` | Update category |
+| DELETE | `/api/v1/categories/:id` | Delete category |
+| GET | `/api/v1/tags` | List tags |
+| POST | `/api/v1/tags` | Create tag |
+| PATCH | `/api/v1/tags/:id` | Update tag |
+| DELETE | `/api/v1/tags/:id` | Delete tag |
+
+### Admin
+
+Admin endpoints require `ADMIN` role.
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/v1/admin/users` | List users |
+| GET | `/api/v1/admin/stats` | Basic statistics |
+| PATCH | `/api/v1/admin/users/:id/role` | Change role |
+| PATCH | `/api/v1/admin/users/:id/toggle-active` | Enable/disable user |
+
+## Error Response Format
+
+All errors use a consistent shape:
+
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": ["title should not be empty"],
+  "error": "Bad Request",
+  "path": "/api/v1/todos",
+  "timestamp": "2026-09-17T10:00:00.000Z",
+  "requestId": "d95f6fbd-5e7b-4e6c-9f8f-3f8f4f8f4f8f"
+}
+```
+
+Validation errors are collected by the global `ValidationPipe`. Unexpected server errors return a generic message in production while still being logged with details.
+
+## Security Practices
+
+- Passwords are hashed with bcrypt.
+- JWT secrets and token lifetimes come from environment configuration.
+- Refresh tokens are stored hashed.
+- Input DTOs are validated and unknown fields are rejected.
+- Prisma uses parameterized queries, reducing SQL injection risk.
+- CORS origins are configured through `CORS_ORIGINS`.
+- Helmet adds security headers.
+- Global rate limiting protects the API.
+- Sensitive fields such as passwords are never returned by user/admin queries.
+- Todo/category/tag access is scoped to the authenticated user.
+- Admin APIs are protected by JWT and role guards.
+
+## Testing
+
+```powershell
+npm test
+npm run test:e2e
+npm run test:cov
+```
+
+Unit tests cover services, validation-related logic, authentication, authorization, and business rules. API/E2E tests cover registration, login, todo CRUD, unauthorized access, ownership checks, and failure scenarios.
+
+## Scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run start:dev` | Start in watch mode |
+| `npm run build` | Build the application |
+| `npm run start:prod` | Run the production build |
+| `npm run lint` | Run oxlint |
+| `npm test` | Run unit tests |
+| `npm run test:e2e` | Run API/E2E tests |
+| `npm run test:cov` | Run tests with coverage |
+

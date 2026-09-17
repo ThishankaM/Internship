@@ -4,6 +4,7 @@ import {
   INestApplication,
   UnauthorizedException,
   ValidationPipe,
+  VersioningType,
 } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -113,9 +114,15 @@ describe('Todo API (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: '1',
+    });
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
+        forbidNonWhitelisted: true,
         transform: true,
       }),
     );
@@ -128,7 +135,7 @@ describe('Todo API (e2e)', () => {
 
   const login = async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: 'user@example.com', password: 'secret123' })
       .expect(201);
 
@@ -137,7 +144,7 @@ describe('Todo API (e2e)', () => {
 
   it('registers a new user', async () => {
     const response = await request(app.getHttpServer())
-      .post('/auth/register')
+      .post('/api/v1/auth/register')
       .send({
         name: 'New User',
         email: 'new@example.com',
@@ -153,7 +160,7 @@ describe('Todo API (e2e)', () => {
 
   it('rejects duplicate registration', async () => {
     await request(app.getHttpServer())
-      .post('/auth/register')
+      .post('/api/v1/auth/register')
       .send({
         name: 'Existing',
         email: 'existing@example.com',
@@ -164,13 +171,13 @@ describe('Todo API (e2e)', () => {
 
   it('rejects invalid login credentials', async () => {
     await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: 'user@example.com', password: 'wrong-password' })
       .expect(401);
   });
 
   it('rejects unauthorized todo requests', async () => {
-    await request(app.getHttpServer()).get('/todos').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/todos').expect(401);
   });
 
   it('creates a todo', async () => {
@@ -184,7 +191,7 @@ describe('Todo API (e2e)', () => {
     });
 
     const response = await request(app.getHttpServer())
-      .post('/todos')
+      .post('/api/v1/todos')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'Ship backend' })
       .expect(201);
@@ -200,7 +207,7 @@ describe('Todo API (e2e)', () => {
     todoMock.count.mockResolvedValue(1);
 
     const response = await request(app.getHttpServer())
-      .get('/todos')
+      .get('/api/v1/todos')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -225,7 +232,7 @@ describe('Todo API (e2e)', () => {
     });
 
     const response = await request(app.getHttpServer())
-      .patch('/todos/todo-1')
+      .patch('/api/v1/todos/todo-1')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'Ship backend today', status: 'in-progress' })
       .expect(200);
@@ -242,7 +249,7 @@ describe('Todo API (e2e)', () => {
     todoMock.findFirst.mockResolvedValue(null);
 
     await request(app.getHttpServer())
-      .patch('/todos/missing')
+      .patch('/api/v1/todos/missing')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'Does not matter' })
       .expect(404);
@@ -253,7 +260,7 @@ describe('Todo API (e2e)', () => {
     todoMock.findFirst.mockResolvedValue(null);
 
     await request(app.getHttpServer())
-      .patch('/todos/other-user-todo')
+      .patch('/api/v1/todos/other-user-todo')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'Should not update' })
       .expect(404);
@@ -265,7 +272,7 @@ describe('Todo API (e2e)', () => {
     todoMock.delete.mockResolvedValue({ id: 'todo-1' });
 
     await request(app.getHttpServer())
-      .delete('/todos/todo-1')
+      .delete('/api/v1/todos/todo-1')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
   });
