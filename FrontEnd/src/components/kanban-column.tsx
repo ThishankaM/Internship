@@ -1,44 +1,79 @@
+import { Plus } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
+import { TaskCardSkeleton } from "@/components/states/loading-state";
+import { EmptyState } from "@/components/states/empty-state";
 import type { Todo } from "@/types/todo";
 
 interface KanbanColumnProps {
   title: string;
   count: number;
   todos: Todo[];
+  isLoading?: boolean;
+  deletingId?: string | null;
   onEdit: (todo: Todo) => void;
   onDelete: (id: string) => void;
+  onCreate?: () => void;
 }
 
 export function KanbanColumn({
   title,
   count,
   todos,
+  isLoading = false,
+  deletingId = null,
   onEdit,
   onDelete,
+  onCreate,
 }: KanbanColumnProps) {
   return (
-    <div className="flex h-full w-80 shrink-0 flex-col">
-      <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="font-semibold text-foreground">{title}</span>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          {count}
-        </span>
+    <div className="flex min-w-[300px] flex-1 flex-col rounded-xl border border-border bg-card p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-base font-medium text-card-foreground">
+          {title}
+          {!isLoading && (
+            <span className="ml-2 text-xs text-muted-foreground">{count}</span>
+          )}
+        </h3>
+        {onCreate && (
+          <button
+            onClick={onCreate}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+            aria-label={`Add task to ${title}`}
+          >
+            <Plus size={18} />
+          </button>
+        )}
       </div>
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl bg-muted/30 p-2">
-        {todos.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-12 text-center text-sm text-muted-foreground">
-            No tasks yet
-          </div>
-        ) : (
+
+      <div className="custom-scrollbar flex-1 overflow-y-auto pr-1">
+        {isLoading && (
+          <>
+            <TaskCardSkeleton />
+            <TaskCardSkeleton />
+            <TaskCardSkeleton />
+          </>
+        )}
+
+        {!isLoading && todos.length === 0 && (
+          <EmptyState
+            title="No tasks"
+            message={`Nothing in "${title}" right now.`}
+            actionLabel={onCreate ? "Add task" : undefined}
+            onAction={onCreate}
+          />
+        )}
+
+        {!isLoading &&
           todos.map((todo) => (
             <TaskCard
               key={todo.id}
               todo={todo}
+              isDeleting={deletingId === todo.id}
               onEdit={onEdit}
               onDelete={onDelete}
             />
           ))
-        )}
+        }
       </div>
     </div>
   );

@@ -7,13 +7,12 @@ import {
   LogOut,
   Settings,
   Sun,
-  User,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { NavItem } from "@/components/nav-item";
+import type { User } from "@/types/auth";
 
 interface TaskSidebarProps {
-  user: { id: string; name: string; email: string };
+  user: User | null;
   onLogout: () => void;
 }
 
@@ -30,28 +29,21 @@ export function TaskSidebar({ user, onLogout }: TaskSidebarProps) {
         <NavItem icon={Clock} label="Schedule" />
         <NavItem icon={Sun} label="My Day" />
       </nav>
-      <div className="space-y-1 border-t border-border p-3">
-        <div className="flex items-center gap-2 rounded-lg px-3 py-2">
-          <User className="size-4 shrink-0 text-muted-foreground" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">
-              {user.name}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </div>
+      <div className="mt-auto border-t border-border p-4">
+        {user && (
+          <p className="mb-3 truncate px-2 text-xs text-muted-foreground">
+            {user.email}
+          </p>
+        )}
         <NavItem icon={Settings} label="Settings" />
         <NavItem icon={Bell} label="Notifications" />
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
+        <button
           onClick={onLogout}
+          className="flex w-full items-center gap-3 rounded-lg p-3 text-destructive transition-colors hover:bg-destructive/10"
         >
-          <LogOut className="size-4" />
+          <LogOut size={18} />
           Logout
-        </Button>
+        </button>
       </div>
     </aside>
   );

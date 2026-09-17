@@ -1,12 +1,18 @@
 import React from "react";
-import { HelpCircle, Info, Moon, Radio, Sun } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
-import { MiniProjectCard } from "@/components/mini-project-card";
-import { useTheme } from "@/hooks/use-theme";
+import { LoadingState } from "@/components/states/loading-state";
+import { EmptyState } from "@/components/states/empty-state";
+import type { Todo } from "@/types/todo";
 
-export function ProjectPanel() {
+interface ProjectPanelProps {
+  todos: Todo[];
+  isLoading: boolean;
+}
+
+export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const { isDark, toggleTheme } = useTheme();
+  const topProjects = todos.slice(0, 4);
 
   return (
     <aside className="hidden w-80 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
@@ -20,60 +26,35 @@ export function ProjectPanel() {
         />
       </div>
 
-      <div>
-        <p className="mb-3 text-sm font-semibold text-foreground">Projects</p>
-        <div className="space-y-3">
-          <MiniProjectCard
-            title="Website Redesign"
-            tasks={12}
-            progress={72}
-            color="bg-primary"
-          />
-          <MiniProjectCard
-            title="Mobile App"
-            tasks={8}
-            progress={45}
-            color="bg-secondary-accent"
-          />
-          <MiniProjectCard
-            title="Marketing Site"
-            tasks={5}
-            progress={20}
-            color="bg-success"
-          />
+      <div className="flex-1 rounded-xl border border-border bg-card p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-medium text-card-foreground">Today's Project</h3>
+          <MoreVertical size={16} className="text-muted-foreground" />
         </div>
-      </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-muted-foreground">
-        <button
-          type="button"
-          className="flex items-center gap-1.5"
-          aria-label="Theme"
-          onClick={toggleTheme}
-        >
-          {isDark ? <Moon className="size-4" /> : <Sun className="size-4" />} Theme
-        </button>
-        <button
-          type="button"
-          className="flex items-center gap-1.5"
-          aria-label="Help"
-        >
-          <HelpCircle className="size-4" /> Help
-        </button>
-        <button
-          type="button"
-          className="flex items-center gap-1.5"
-          aria-label="Info"
-        >
-          <Info className="size-4" /> Info
-        </button>
-        <button
-          type="button"
-          className="flex items-center gap-1.5"
-          aria-label="Live"
-        >
-          <Radio className="size-4" /> Live
-        </button>
+        {isLoading && <LoadingState message="Loading projects..." />}
+
+        {!isLoading && topProjects.length === 0 && (
+          <EmptyState title="No projects" message="Your tasks will appear here." />
+        )}
+
+        {!isLoading &&
+          topProjects.map((todo) => (
+            <div
+              key={todo.id}
+              className="mb-3 flex items-center justify-between rounded-lg border border-border bg-muted/40 p-3"
+            >
+              <div className="min-w-0">
+                <h4 className="truncate text-sm text-foreground">{todo.title}</h4>
+                <p className="truncate text-xs text-muted-foreground">
+                  {todo.description || "No description"}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-primary">
+                <span className="text-[10px] text-foreground">{todo.progress}%</span>
+              </div>
+            </div>
+          ))}
       </div>
     </aside>
   );

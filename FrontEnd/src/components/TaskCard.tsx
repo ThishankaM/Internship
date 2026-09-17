@@ -1,68 +1,92 @@
-import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Loader2, MessageSquare, MoreHorizontal, Paperclip } from "lucide-react";
 import type { Todo, TodoStatus } from "@/types/todo";
-
-const STATUS_LABELS: Record<TodoStatus, string> = {
-  todo: "To do",
-  "in-progress": "In progress",
-  done: "Done",
-};
-
-const STATUS_BADGES: Record<TodoStatus, string> = {
-  todo: "bg-muted text-muted-foreground",
-  "in-progress": "bg-secondary-accent/15 text-secondary-accent",
-  done: "bg-success/15 text-success",
-};
 
 interface TaskCardProps {
   todo: Todo;
+  isDeleting?: boolean;
   onEdit: (todo: Todo) => void;
   onDelete: (id: string) => void;
 }
 
-export function TaskCard({ todo, onEdit, onDelete }: TaskCardProps) {
+const PROGRESS_COLORS: Record<TodoStatus, string> = {
+  todo: "bg-muted-foreground/60",
+  "in-progress": "bg-primary",
+  done: "bg-success",
+};
+
+export function TaskCard({
+  todo,
+  isDeleting = false,
+  onEdit,
+  onDelete,
+}: TaskCardProps) {
   return (
-    <Card className="group gap-3 py-4">
-      <CardHeader className="px-4">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base">{todo.title}</CardTitle>
-          <span
-            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_BADGES[todo.status]}`}
-          >
-            {STATUS_LABELS[todo.status]}
+    <div
+      className={`mb-4 rounded-xl border border-border bg-card p-4 text-card-foreground transition-opacity ${
+        isDeleting ? "pointer-events-none opacity-40" : ""
+      }`}
+    >
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h4 className="truncate text-sm font-medium">{todo.title}</h4>
+          {todo.description && (
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+              {todo.description}
+            </p>
+          )}
+        </div>
+        {isDeleting ? (
+          <Loader2 size={16} className="animate-spin text-muted-foreground" />
+        ) : (
+          <details className="relative">
+            <summary className="list-none cursor-pointer text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+              <MoreHorizontal size={16} />
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-md">
+              <button
+                type="button"
+                onClick={() => onEdit(todo)}
+                className="block w-full rounded px-2 py-1.5 text-left transition-colors hover:bg-accent"
+              >
+                Edit Task
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(todo.id)}
+                className="block w-full rounded px-2 py-1.5 text-left text-destructive transition-colors hover:bg-accent"
+              >
+                Delete Task
+              </button>
+            </div>
+          </details>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-1 flex justify-end text-xs text-muted-foreground">
+          Progress {todo.progress}%
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-all ${PROGRESS_COLORS[todo.status]}`}
+            style={{ width: `${todo.progress}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          {todo.dueDate ?? "No due date"}
+        </div>
+        <div className="flex gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <MessageSquare size={14} /> {todo.comments}
+          </span>
+          <span className="flex items-center gap-1">
+            <Paperclip size={14} /> {todo.attachments}
           </span>
         </div>
-        {todo.description && (
-          <CardDescription className="line-clamp-2">
-            {todo.description}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="flex justify-end gap-1 px-4">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onEdit(todo)}
-          aria-label="Edit todo"
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onDelete(todo.id)}
-          aria-label="Delete todo"
-        >
-          <Trash2 />
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

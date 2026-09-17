@@ -43,7 +43,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo, onUpdate, onDelete }) => {
         onSubmit={handleEdit}
         initialData={{
           title: todo.title,
-          description: todo.description,
+          description: todo.description ?? "",
         }}
         isEditing={true}
         onCancel={() => setIsEditing(false)}
