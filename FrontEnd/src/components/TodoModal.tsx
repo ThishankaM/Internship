@@ -149,21 +149,25 @@ export function TodoModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="todo-status">Status</Label>
-              <select
-                id="todo-status"
+              <Select
                 value={status}
+                items={Object.fromEntries(
+                  STATUS_OPTIONS.map((option) => [option.value, option.label])
+                )}
                 disabled={isSaving}
-                onChange={(event) =>
-                  setStatus(event.target.value as TodoStatus)
-                }
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={(value) => setStatus(value as TodoStatus)}
               >
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="todo-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="todo-progress">Progress (%)</Label>
@@ -213,22 +217,34 @@ export function TodoModal({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="todo-category">Category</Label>
-              <select
-                id="todo-category"
-                value={categoryId}
+              <Select
+                value={categoryId || "none"}
+                items={{
+                  none: "No category",
+                  ...Object.fromEntries(
+                    categories.map((category) => [
+                      category.id,
+                      category.name,
+                    ])
+                  ),
+                }}
                 disabled={isSaving}
-                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
-                  setCategoryId(event.target.value)
+                onValueChange={(value) =>
+                  setCategoryId(value === "none" ? "" : value)
                 }
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">No category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="todo-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
