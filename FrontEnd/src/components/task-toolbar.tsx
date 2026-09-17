@@ -176,6 +176,7 @@ export function TaskToolbar({
         </Select>
 
         <Button
+          className="ml-auto"
           variant="outline"
           onClick={() =>
             onUpdateParams({
