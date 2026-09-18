@@ -4,21 +4,8 @@ import { useOutletContext } from "react-router-dom";
 import { KanbanColumn } from "@/components/kanban-column";
 import { TaskCardPreview } from "@/components/TaskCard";
 import { ErrorState } from "@/components/states/error-state";
+import type { WorkspaceViewContext } from "@/types/views";
 import type { Todo, TodoStatus } from "@/types/todo";
-
-/** Data + handlers the Dashboard shell shares with the routed views. */
-export interface TasksViewContext {
-  todos: Todo[];
-  isLoading: boolean;
-  isError: boolean;
-  error: string | null;
-  deletingId: string | null;
-  onRetry: () => void;
-  onCreate: () => void;
-  onEdit: (todo: Todo) => void;
-  onDelete: (id: string) => void;
-  onMove: (id: string, status: TodoStatus) => void;
-}
 
 function isTodoStatus(value: unknown): value is TodoStatus {
   return value === "todo" || value === "in-progress" || value === "done";
@@ -36,7 +23,7 @@ export default function MyTasksView() {
     onEdit,
     onDelete,
     onMove,
-  } = useOutletContext<TasksViewContext>();
+  } = useOutletContext<WorkspaceViewContext>();
 
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
 

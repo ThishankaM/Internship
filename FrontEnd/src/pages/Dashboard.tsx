@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { format } from "date-fns";
 import { ProjectPanel } from "@/components/project-panel";
 import { TaskSidebar } from "@/components/task-sidebar";
 import { TaskToolbar } from "@/components/task-toolbar";
@@ -11,7 +12,7 @@ import { ErrorState } from "@/components/states/error-state";
 import { useAuth } from "@/providers/auth-context";
 import { useTodos } from "@/hooks/use-todos";
 import { useTaxonomy } from "@/hooks/use-taxonomy";
-import type { TasksViewContext } from "@/components/views/my-tasks-view";
+import type { WorkspaceViewContext } from "@/types/views";
 import type { CreateTodoRequest, Todo, TodoStatus } from "@/types/todo";
 
 export default function Dashboard() {
@@ -90,6 +91,33 @@ export default function Dashboard() {
     });
   };
 
+  // Quick add from the My Day view: a task due today.
+  const handleQuickAdd = async (title: string): Promise<boolean> => {
+    const result = await createTodo({
+      title,
+      status: "todo",
+      progress: 0,
+      dueDate: format(new Date(), "yyyy-MM-dd"),
+    });
+    return result.ok;
+  };
+
+  // Toggling from a list: completing sets status to done (+100%).
+  const handleToggleComplete = (todo: Todo) => {
+    const nextCompleted = !todo.completed;
+    const nextStatus: TodoStatus = nextCompleted
+      ? "done"
+      : todo.status === "done"
+        ? "todo"
+        : todo.status;
+
+    void updateTodo(todo.id, {
+      completed: nextCompleted,
+      status: nextStatus,
+      ...(nextCompleted ? { progress: 100 } : {}),
+    });
+  };
+
   // ---- AUTH LOADING / ERROR ----
   if (isUserLoading) {
     return (
@@ -111,7 +139,7 @@ export default function Dashboard() {
     );
   }
 
-  const tasksViewContext: TasksViewContext = {
+  const tasksViewContext: WorkspaceViewContext = {
     todos,
     isLoading,
     isError,
@@ -122,6 +150,8 @@ export default function Dashboard() {
     onEdit: openEditModal,
     onDelete: deleteTodo,
     onMove: handleMoveTodo,
+    onQuickAdd: handleQuickAdd,
+    onToggleComplete: handleToggleComplete,
   };
 
   return (
