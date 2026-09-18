@@ -41,7 +41,7 @@ export class ProjectsService {
       const total = p.todos.length;
       const completed = p.todos.filter((t: any) => t.completed || t.status === 'done').length;
       const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-      const { todos, ...rest } = p as any;
+      const { todos: _todos, ...rest } = p as any;
       return {
         ...rest,
         stats: {

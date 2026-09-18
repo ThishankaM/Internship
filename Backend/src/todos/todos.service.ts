@@ -11,6 +11,12 @@ import { QueryTodoDto } from './dto/query-todo.dto.js';
 
 type TodoStatus = 'todo' | 'in-progress' | 'done';
 
+function withoutUndefined<T extends Record<string, unknown>>(input: T): T {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined),
+  ) as T;
+}
+
 function enforceProgressInvariant(input: {
   status?: TodoStatus;
   completed?: boolean;
@@ -91,7 +97,7 @@ export class TodosService {
     }
 
     return this.prisma.todo.create({
-      data: {
+      data: withoutUndefined({
         ...rest,
         userId,
         categoryId: categoryId ?? null,
@@ -101,7 +107,7 @@ export class TodosService {
         tags: tagIds?.length
           ? { connect: tagIds.map((tagId) => ({ id: tagId })) }
           : undefined,
-      },
+      }),
       include: { category: true, tags: true, project: true },
     });
   }
@@ -194,7 +200,7 @@ export class TodosService {
 
     return this.prisma.todo.update({
       where: { id },
-      data: {
+      data: withoutUndefined({
         ...rest,
         ...(categoryId !== undefined ? { categoryId } : {}),
         ...(projectId !== undefined ? { projectId } : {}),
@@ -207,7 +213,7 @@ export class TodosService {
         ...(tagIds !== undefined
           ? { tags: { set: tagIds.map((tagId) => ({ id: tagId })) } }
           : {}),
-      },
+      }),
       include: { category: true, tags: true, project: true },
     });
   }

@@ -167,6 +167,11 @@ export class PaginatedTodosResponseDto {
   };
 }
 
+export class ProjectDetailResponseDto extends ProjectResponseDto {
+  @ApiProperty({ type: [TodoResponseDto] })
+  todos: TodoResponseDto[];
+}
+
 export class UserResponseDto {
   @ApiProperty()
   id: string;

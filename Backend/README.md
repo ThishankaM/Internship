@@ -1,6 +1,6 @@
 # TaskFlow Backend
 
-NestJS REST API for the TaskFlow todo application. It stores data in PostgreSQL through Prisma and provides authentication, authorization, todos, categories, tags, and admin APIs.
+NestJS REST API for the TaskFlow todo application. It stores data in PostgreSQL through Prisma and provides authentication, authorization, todos, projects, categories, tags, and admin APIs.
 
 ## Technologies
 
@@ -22,6 +22,7 @@ NestJS REST API for the TaskFlow todo application. It stores data in PostgreSQL 
 - USER and ADMIN roles
 - Password change, forgot password, and reset password flows
 - Todo CRUD with filtering, sorting, and pagination
+- Project management with per-project progress stats
 - Category and tag management
 - User-scoped ownership checks
 - Global validation and consistent error responses
@@ -158,6 +159,17 @@ http://localhost:3000/api/docs
 | PATCH | `/api/v1/tags/:id` | Update tag |
 | DELETE | `/api/v1/tags/:id` | Delete tag |
 
+### Projects
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/v1/projects` | List projects with progress stats |
+| POST | `/api/v1/projects` | Create a project |
+| GET | `/api/v1/projects/:id` | Get a project with its tasks |
+| GET | `/api/v1/projects/:id/tasks` | List the tasks of a project |
+| PATCH | `/api/v1/projects/:id` | Update a project |
+| DELETE | `/api/v1/projects/:id` | Delete a project (tasks are detached) |
+
 ### Admin
 
 Admin endpoints require `ADMIN` role.
@@ -209,7 +221,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-Unit tests cover services, validation-related logic, authentication, authorization, and business rules. API/E2E tests cover registration, login, todo CRUD, unauthorized access, ownership checks, and failure scenarios.
+Unit tests cover services, validation-related logic, authentication, authorization, and business rules. API/E2E tests cover registration, login, todo CRUD, project CRUD, unauthorized access, ownership checks, and failure scenarios.
 
 ## Scripts
 
@@ -222,4 +234,3 @@ Unit tests cover services, validation-related logic, authentication, authorizati
 | `npm test` | Run unit tests |
 | `npm run test:e2e` | Run API/E2E tests |
 | `npm run test:cov` | Run tests with coverage |
-

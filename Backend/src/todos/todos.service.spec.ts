@@ -23,10 +23,15 @@ describe('TodosService', () => {
     count: vi.fn(),
   };
 
+  const projectMock = {
+    findFirst: vi.fn(),
+  };
+
   const prismaMock = {
     todo: todoMock,
     category: categoryMock,
     tag: tagMock,
+    project: projectMock,
     $transaction: vi.fn(),
   };
 
@@ -57,9 +62,9 @@ describe('TodosService', () => {
           title: 'Task',
           userId: 'user-1',
           categoryId: null,
-          tags: undefined,
+          projectId: null,
         },
-        include: { category: true, tags: true },
+        include: { category: true, tags: true, project: true },
       });
       expect(result).toEqual({ id: 'todo-1', title: 'Task' });
     });
@@ -92,6 +97,7 @@ describe('TodosService', () => {
           title: 'Task',
           userId: 'user-1',
           categoryId: 'category-1',
+          projectId: null,
           tags: {
             connect: [
               { id: 'tag-1' },
@@ -99,8 +105,37 @@ describe('TodosService', () => {
             ],
           },
         },
-        include: { category: true, tags: true },
+        include: { category: true, tags: true, project: true },
       });
+    });
+
+    it('creates a todo attached to an owned project', async () => {
+      projectMock.findFirst.mockResolvedValue({ id: 'project-1' });
+      todoMock.create.mockResolvedValue({ id: 'todo-3', projectId: 'project-1' });
+
+      await service.create({ title: 'Task', projectId: 'project-1' }, 'user-1');
+
+      expect(projectMock.findFirst).toHaveBeenCalledWith({
+        where: { id: 'project-1', userId: 'user-1' },
+      });
+      expect(todoMock.create).toHaveBeenCalledWith({
+        data: {
+          title: 'Task',
+          userId: 'user-1',
+          categoryId: null,
+          projectId: 'project-1',
+        },
+        include: { category: true, tags: true, project: true },
+      });
+    });
+
+    it('rejects a project owned by another user', async () => {
+      projectMock.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.create({ title: 'Task', projectId: 'other-project' }, 'user-1'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(todoMock.create).not.toHaveBeenCalled();
     });
 
     it('rejects a category owned by another user', async () => {
@@ -161,7 +196,7 @@ describe('TodosService', () => {
         orderBy: { title: 'asc' },
         skip: 5,
         take: 5,
-        include: { category: true, tags: true },
+        include: { category: true, tags: true, project: true },
       });
       expect(result).toEqual({
         data: [{ id: 'todo-1' }],
@@ -207,7 +242,7 @@ describe('TodosService', () => {
       expect(todoMock.update).toHaveBeenCalledWith({
         where: { id: 'todo-1' },
         data: { title: 'Updated' },
-        include: { category: true, tags: true },
+        include: { category: true, tags: true, project: true },
       });
       expect(result).toEqual({ id: 'todo-1', title: 'Updated' });
     });
