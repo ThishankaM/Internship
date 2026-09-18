@@ -1,9 +1,7 @@
-import { useMemo, useState } from "react";
-import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
-import { KanbanColumn } from "@/components/kanban-column";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import { ProjectPanel } from "@/components/project-panel";
 import { TaskSidebar } from "@/components/task-sidebar";
-import { TaskCardPreview } from "@/components/TaskCard";
 import { TaskToolbar } from "@/components/task-toolbar";
 import { TodoModal } from "@/components/TodoModal";
 import { OrganizerModal } from "@/components/OrganizerModal";
@@ -13,11 +11,8 @@ import { ErrorState } from "@/components/states/error-state";
 import { useAuth } from "@/providers/auth-context";
 import { useTodos } from "@/hooks/use-todos";
 import { useTaxonomy } from "@/hooks/use-taxonomy";
+import type { TasksViewContext } from "@/components/views/my-tasks-view";
 import type { CreateTodoRequest, Todo, TodoStatus } from "@/types/todo";
-
-function isTodoStatus(value: unknown): value is TodoStatus {
-  return value === "todo" || value === "in-progress" || value === "done";
-}
 
 export default function Dashboard() {
   const {
@@ -48,7 +43,6 @@ export default function Dashboard() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
-  const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -67,15 +61,6 @@ export default function Dashboard() {
     deleteTag,
   } = useTaxonomy(Boolean(user));
 
-  const { todoList, inProgressList, doneList } = useMemo(
-    () => ({
-      todoList: todos.filter((t) => t.status === "todo"),
-      inProgressList: todos.filter((t) => t.status === "in-progress"),
-      doneList: todos.filter((t) => t.status === "done"),
-    }),
-    [todos],
-  );
-
   const openCreateModal = () => {
     clearMutationError();
     setEditingTodo(null);
@@ -93,6 +78,16 @@ export default function Dashboard() {
       ? await updateTodo(editingTodo.id, payload)
       : await createTodo(payload);
     return result.ok;
+  };
+
+  // Dragging a card into "done" completes it and forces progress to 100%.
+  const handleMoveTodo = (id: string, status: TodoStatus) => {
+    const isDone = status === "done";
+    void updateTodo(id, {
+      status,
+      completed: isDone,
+      ...(isDone ? { progress: 100 } : {}),
+    });
   };
 
   // ---- AUTH LOADING / ERROR ----
@@ -116,6 +111,19 @@ export default function Dashboard() {
     );
   }
 
+  const tasksViewContext: TasksViewContext = {
+    todos,
+    isLoading,
+    isError,
+    error,
+    deletingId,
+    onRetry: refetch,
+    onCreate: openCreateModal,
+    onEdit: openEditModal,
+    onDelete: deleteTodo,
+    onMove: handleMoveTodo,
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-sm">
       <TaskSidebar
@@ -138,90 +146,7 @@ export default function Dashboard() {
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
         />
 
-        {/* GLOBAL FETCH ERROR */}
-        {isError ? (
-          <div className="flex flex-1 items-center justify-center px-6">
-            <ErrorState
-              title="Couldn't load your tasks"
-              message={error ?? "Unknown error"}
-              onRetry={refetch}
-            />
-          </div>
-        ) : (
-          <DragDropProvider
-            onDragStart={(event) => {
-              const draggedId = event.operation.source?.id;
-              setActiveTodo(
-                todos.find((todo) => todo.id === draggedId) ?? null,
-              );
-            }}
-            onDragEnd={(event) => {
-              setActiveTodo(null);
-
-              if (event.canceled) return;
-
-              const draggedId = event.operation.source?.id;
-              const draggedTodo =
-                todos.find((todo) => todo.id === draggedId) ?? null;
-              const target = event.operation.target?.id;
-
-              if (
-                !draggedTodo ||
-                !isTodoStatus(target) ||
-                draggedTodo.status === target
-              ) {
-                return;
-              }
-
-              const isDone = target === "done";
-              void updateTodo(draggedTodo.id, {
-                status: target,
-                completed: isDone,
-                ...(isDone ? { progress: 100 } : {}),
-              });
-            }}
-          >
-            <div className="flex flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 py-6">
-              <KanbanColumn
-                status="todo"
-                title="To do List"
-                count={todoList.length}
-                todos={todoList}
-                isLoading={isLoading}
-                deletingId={deletingId}
-                onEdit={openEditModal}
-                onDelete={deleteTodo}
-                onCreate={openCreateModal}
-              />
-              <KanbanColumn
-                status="in-progress"
-                title="In Progress"
-                count={inProgressList.length}
-                todos={inProgressList}
-                isLoading={isLoading}
-                deletingId={deletingId}
-                onEdit={openEditModal}
-                onDelete={deleteTodo}
-                onCreate={openCreateModal}
-              />
-              <KanbanColumn
-                status="done"
-                title="Done"
-                count={doneList.length}
-                todos={doneList}
-                isLoading={isLoading}
-                deletingId={deletingId}
-                onEdit={openEditModal}
-                onDelete={deleteTodo}
-                onCreate={openCreateModal}
-              />
-            </div>
-
-            <DragOverlay>
-              {activeTodo ? <TaskCardPreview todo={activeTodo} /> : null}
-            </DragOverlay>
-          </DragDropProvider>
-        )}
+        <Outlet context={tasksViewContext} />
       </main>
 
       <ProjectPanel todos={todos} isLoading={isLoading} />

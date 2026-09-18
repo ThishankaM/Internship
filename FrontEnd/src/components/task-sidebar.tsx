@@ -10,10 +10,24 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { NavItem } from "@/components/nav-item";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { User } from "@/types/auth";
+
+interface WorkspaceNavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const WORKSPACE_NAV: WorkspaceNavItem[] = [
+  { to: "/tasks", label: "My Tasks", icon: Calendar },
+  { to: "/projects", label: "Projects", icon: Briefcase },
+  { to: "/schedule", label: "Schedule", icon: Clock },
+  { to: "/my-day", label: "My Day", icon: Sun },
+];
 
 interface TaskSidebarProps {
   user: User | null;
@@ -31,7 +45,13 @@ export function TaskSidebar({
   onClose,
 }: TaskSidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
+
+  const go = (path: string) => {
+    navigate(path);
+    onClose?.();
+  };
 
   const content = (
     <>
@@ -53,18 +73,21 @@ export function TaskSidebar({
       </div>
 
       <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-3">
-        <NavItem icon={Calendar} label="My Tasks" active />
-        <NavItem icon={Briefcase} label="Projects" />
-        <NavItem icon={Clock} label="Schedule" />
-        <NavItem icon={Sun} label="My Day" />
+        {WORKSPACE_NAV.map(({ to, label, icon }) => (
+          <NavItem
+            key={to}
+            icon={icon}
+            label={label}
+            active={location.pathname === to}
+            onClick={() => go(to)}
+          />
+        ))}
         {user?.role === "ADMIN" && (
           <NavItem
             icon={Shield}
             label="Admin"
-            onClick={() => {
-              navigate("/admin");
-              onClose?.();
-            }}
+            active={location.pathname.startsWith("/admin")}
+            onClick={() => go("/admin")}
           />
         )}
       </nav>

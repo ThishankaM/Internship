@@ -8,6 +8,11 @@ const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AuthPage = lazy(() => import("@/pages/AuthPage"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 
+const MyTasksView = lazy(() => import("@/components/views/my-tasks-view"));
+const ProjectsView = lazy(() => import("@/components/views/projects-view"));
+const ScheduleView = lazy(() => import("@/components/views/schedule-view"));
+const MyDayView = lazy(() => import("@/components/views/my-day-view"));
+
 function RouteFallback() {
   return (
     <div className="flex h-screen items-center justify-center bg-background">
@@ -31,6 +36,8 @@ export default function App() {
               path="/reset-password"
               element={<AuthPage key="reset" mode="reset" />}
             />
+
+            {/* Dashboard shell with the workspace views nested inside it */}
             <Route
               path="/"
               element={
@@ -38,7 +45,14 @@ export default function App() {
                   <Dashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="/tasks" replace />} />
+              <Route path="tasks" element={<MyTasksView />} />
+              <Route path="projects" element={<ProjectsView />} />
+              <Route path="schedule" element={<ScheduleView />} />
+              <Route path="my-day" element={<MyDayView />} />
+            </Route>
+
             <Route
               path="/admin"
               element={
