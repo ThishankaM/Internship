@@ -11,6 +11,8 @@ const baseTodo: Todo = {
   priority: "MEDIUM",
   progress: 20,
   dueDate: "2026-09-20",
+  scheduledStart: null,
+  scheduledEnd: null,
   comments: 0,
   attachments: 0,
   userId: "user-1",
@@ -30,6 +32,7 @@ describe("TodoModal", () => {
         editingTodo={null}
         categories={[]}
         tags={[]}
+        projects={[]}
         onClose={vi.fn()}
         onSave={onSave}
       />,
@@ -67,6 +70,7 @@ describe("TodoModal", () => {
             created_at: "2026-09-17T00:00:00.000Z",
           },
         ]}
+        projects={[]}
         onClose={onClose}
         onSave={onSave}
       />,
@@ -107,6 +111,7 @@ describe("TodoModal", () => {
         editingTodo={baseTodo}
         categories={[]}
         tags={[]}
+        projects={[]}
         onClose={vi.fn()}
         onSave={onSave}
       />,

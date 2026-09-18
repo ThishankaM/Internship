@@ -11,6 +11,8 @@ const todo: Todo = {
   priority: "HIGH",
   progress: 30,
   dueDate: "2026-09-20",
+  scheduledStart: null,
+  scheduledEnd: null,
   comments: 2,
   attachments: 1,
   userId: "user-1",

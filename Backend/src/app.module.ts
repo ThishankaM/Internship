@@ -9,6 +9,7 @@ import { TodosModule } from './todos/todos.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { TagsModule } from './tags/tags.module.js';
+import { ProjectsModule } from './projects/projects.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AdminController } from './admin/admin.controller.js';
 import configuration, {
@@ -56,6 +57,7 @@ export const isObserveEnabled = Boolean(observeAppKey && observeAppSecret);
     AuthModule,
     CategoriesModule,
     TagsModule,
+    ProjectsModule,
   ],
   controllers: [AppController, AdminController],
   providers: [

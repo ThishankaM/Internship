@@ -8,28 +8,101 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTodoDto } from './dto/create-todo.dto.js';
 import { UpdateTodoDto } from './dto/update-todo.dto.js';
 import { QueryTodoDto } from './dto/query-todo.dto.js';
-import { Prisma } from '@prisma/client';
+
+type TodoStatus = 'todo' | 'in-progress' | 'done';
+
+function enforceProgressInvariant(input: {
+  status?: TodoStatus;
+  completed?: boolean;
+  progress?: number;
+}): { status?: TodoStatus; completed?: boolean; progress?: number } {
+  let { status, completed, progress } = input;
+
+  // If completed explicitly true, force done + 100
+  if (completed === true) {
+    return { status: 'done', completed: true, progress: 100 };
+  }
+
+  if (status === 'done') {
+    return { status: 'done', completed: true, progress: 100 };
+  }
+
+  if (status === 'todo') {
+    const p = progress ?? 0;
+    return {
+      status: 'todo',
+      completed: false,
+      progress: Math.max(0, Math.min(99, p)),
+    };
+  }
+
+  if (status === 'in-progress') {
+    let p = progress ?? 1;
+    if (p <= 0) p = 1;
+    if (p >= 100) p = 99;
+    return { status: 'in-progress', completed: false, progress: p };
+  }
+
+  // status undefined, but progress/completed may be present
+  if (progress !== undefined) {
+    if (progress >= 100) {
+      return { status: 'done', completed: true, progress: 100 };
+    }
+    if (progress > 0 && status === undefined) {
+      // if progress >0 and no status, assume in-progress unless completed false explicitly
+      if (completed === false) {
+        return { completed: false, progress: Math.min(99, Math.max(0, progress)) };
+      }
+    }
+  }
+
+  // default: if completed false, ensure progress not 100
+  if (completed === false && progress === 100) {
+    return { completed: false, progress: 99 };
+  }
+
+  return { status, completed, progress };
+}
 
 @Injectable()
 export class TodosService {
   constructor(private prisma: PrismaService) {}
 
   async create(createTodoDto: CreateTodoDto, userId: string) {
-    const { categoryId, tagIds, ...rest } = createTodoDto;
-    if (rest.status === 'done') rest.progress = 100;
+    const { categoryId, projectId, tagIds, scheduledStart, scheduledEnd, ...rest } = createTodoDto;
 
-    await this.validateRelations(categoryId, tagIds, userId);
+    const invariant = enforceProgressInvariant({
+      status: rest.status as TodoStatus | undefined,
+      completed: rest.completed,
+      progress: rest.progress,
+    });
+
+    Object.assign(rest, invariant);
+
+    await this.validateRelations(categoryId, projectId, tagIds, userId);
+
+    // validate scheduled times
+    if (scheduledStart && scheduledEnd) {
+      const start = new Date(scheduledStart);
+      const end = new Date(scheduledEnd);
+      if (end <= start) {
+        throw new BadRequestException('scheduledEnd must be after scheduledStart');
+      }
+    }
 
     return this.prisma.todo.create({
       data: {
         ...rest,
         userId,
         categoryId: categoryId ?? null,
+        projectId: projectId ?? null,
+        scheduledStart: scheduledStart ? new Date(scheduledStart) : undefined,
+        scheduledEnd: scheduledEnd ? new Date(scheduledEnd) : undefined,
         tags: tagIds?.length
           ? { connect: tagIds.map((tagId) => ({ id: tagId })) }
           : undefined,
       },
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, project: true },
     });
   }
 
@@ -38,6 +111,7 @@ export class TodosService {
       search,
       categoryId,
       tagId,
+      projectId,
       filter = 'all',
       sortBy = 'created_at',
       sortOrder = 'desc',
@@ -45,9 +119,10 @@ export class TodosService {
       limit = 10,
     } = query;
 
-    const where: Prisma.TodoWhereInput = { userId };
+    const where: any = { userId };
 
     if (categoryId) where.categoryId = categoryId;
+    if (projectId) where.projectId = projectId;
     if (tagId) where.tags = { some: { id: tagId } };
 
     if (search) {
@@ -60,7 +135,7 @@ export class TodosService {
     if (filter === 'completed') where.completed = true;
     if (filter === 'active') where.completed = false;
 
-    const orderBy = { [sortBy]: sortOrder } as Prisma.TodoOrderByWithRelationInput;
+    const orderBy = { [sortBy]: sortOrder } as any;
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.prisma.$transaction([
@@ -69,7 +144,7 @@ export class TodosService {
         orderBy,
         skip,
         take: limit,
-        include: { category: true, tags: true },
+        include: { category: true, tags: true, project: true },
       }),
       this.prisma.todo.count({ where }),
     ]);
@@ -88,7 +163,7 @@ export class TodosService {
   async findOne(id: string, userId: string) {
     const todo = await this.prisma.todo.findFirst({
       where: { id, userId },
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, project: true },
     });
     if (!todo) throw new NotFoundException('Todo not found');
     return todo;
@@ -97,21 +172,43 @@ export class TodosService {
   async update(id: string, updateTodoDto: UpdateTodoDto, userId: string) {
     await this.findOne(id, userId);
 
-    const { categoryId, tagIds, ...rest } = updateTodoDto;
-    if (rest.status === 'done') rest.progress = 100;
+    const { categoryId, projectId, tagIds, scheduledStart, scheduledEnd, ...rest } = updateTodoDto;
 
-    await this.validateRelations(categoryId, tagIds, userId);
+    const invariant = enforceProgressInvariant({
+      status: rest.status as TodoStatus | undefined,
+      completed: rest.completed,
+      progress: rest.progress,
+    });
+
+    Object.assign(rest, invariant);
+
+    await this.validateRelations(categoryId, projectId, tagIds, userId);
+
+    if (scheduledStart && scheduledEnd) {
+      const start = new Date(scheduledStart);
+      const end = new Date(scheduledEnd);
+      if (end <= start) {
+        throw new BadRequestException('scheduledEnd must be after scheduledStart');
+      }
+    }
 
     return this.prisma.todo.update({
       where: { id },
       data: {
         ...rest,
         ...(categoryId !== undefined ? { categoryId } : {}),
+        ...(projectId !== undefined ? { projectId } : {}),
+        ...(scheduledStart !== undefined
+          ? { scheduledStart: scheduledStart ? new Date(scheduledStart) : null }
+          : {}),
+        ...(scheduledEnd !== undefined
+          ? { scheduledEnd: scheduledEnd ? new Date(scheduledEnd) : null }
+          : {}),
         ...(tagIds !== undefined
           ? { tags: { set: tagIds.map((tagId) => ({ id: tagId })) } }
           : {}),
       },
-      include: { category: true, tags: true },
+      include: { category: true, tags: true, project: true },
     });
   }
 
@@ -122,6 +219,7 @@ export class TodosService {
 
   private async validateRelations(
     categoryId?: string,
+    projectId?: string | null,
     tagIds?: string[],
     userId?: string,
   ) {
@@ -132,6 +230,15 @@ export class TodosService {
 
       if (!category) {
         throw new BadRequestException('Category not found or access denied');
+      }
+    }
+
+    if (projectId) {
+      const project = await this.prisma.project.findFirst({
+        where: { id: projectId, userId },
+      });
+      if (!project) {
+        throw new BadRequestException('Project not found or access denied');
       }
     }
 

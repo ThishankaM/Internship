@@ -91,8 +91,16 @@ function TaskCardBody({
                 {todo.description}
               </p>
             )}
-            {(todo.category || (todo.tags && todo.tags.length > 0)) && (
+            {(todo.project || todo.category || (todo.tags && todo.tags.length > 0)) && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {todo.project && (
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+                    style={{ backgroundColor: todo.project.color || "#8A73FF" }}
+                  >
+                    {todo.project.name}
+                  </span>
+                )}
                 {todo.category && (
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                     {todo.category.name}

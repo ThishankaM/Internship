@@ -20,11 +20,31 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+function isTodayTask(dueDate: string | null, scheduledStart: string | null): boolean {
+  const today = new Date();
+  if (scheduledStart) {
+    try {
+      return isSameDay(parseISO(scheduledStart), today);
+    } catch {
+      // fallthrough
+    }
+  }
+  if (dueDate) {
+    try {
+      return isSameDay(parseISO(dueDate), today);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export default function MyDayView() {
   const { user } = useAuth();
 
   const {
     todos,
+    projects,
     isLoading,
     isError,
     error,
@@ -36,12 +56,15 @@ export default function MyDayView() {
   } = useOutletContext<WorkspaceViewContext>();
 
   const todayTasks = useMemo(() => {
-    const today = new Date();
     return todos
-      .filter(
-        (todo) => todo.dueDate && isSameDay(parseISO(todo.dueDate), today)
-      )
-      .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+      .filter((todo) => isTodayTask(todo.dueDate, todo.scheduledStart))
+      .sort((a, b) => {
+        // scheduled time first
+        const aTime = a.scheduledStart ? parseISO(a.scheduledStart).getTime() : Infinity;
+        const bTime = b.scheduledStart ? parseISO(b.scheduledStart).getTime() : Infinity;
+        if (aTime !== bTime) return aTime - bTime;
+        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+      });
   }, [todos]);
 
   const overdueCount = useMemo(
@@ -63,6 +86,16 @@ export default function MyDayView() {
   const completedToday = todayTasks.filter((todo) => todo.completed).length;
   const focusTask =
     priorityTasks[0] ?? todayTasks.find((todo) => !todo.completed) ?? null;
+
+  const projectSummary = useMemo(() => {
+    const map = new Map<string, number>();
+    todayTasks.forEach((t) => {
+      if (t.project?.name) {
+        map.set(t.project.name, (map.get(t.project.name) ?? 0) + 1);
+      }
+    });
+    return Array.from(map.entries()).slice(0, 3);
+  }, [todayTasks]);
 
   if (isLoading && todos.length === 0) {
     return (
@@ -96,14 +129,23 @@ export default function MyDayView() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <header>
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {format(new Date(), "EEEE, MMMM d")}
+            {format(new Date(), "EEEE, MMMM d")} • {projects.length} projects
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             {getGreeting()}, {user?.name ?? "there"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Here&apos;s what&apos;s on your plate for today.
+            {todayTasks.length} tasks for today • {priorityTasks.length} high priority • {overdueCount} overdue
           </p>
+          {projectSummary.length > 0 && (
+            <div className="mt-2 flex gap-2">
+              {projectSummary.map(([name, count]) => (
+                <span key={name} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">
+                  {name}: {count}
+                </span>
+              ))}
+            </div>
+          )}
         </header>
 
         <QuickAddTask onAdd={onQuickAdd} />

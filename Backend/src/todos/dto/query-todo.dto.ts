@@ -16,16 +16,20 @@ export class QueryTodoDto {
   @IsOptional() @IsString()
   tagId?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional() @IsString()
+  projectId?: string;
+
   @ApiPropertyOptional({ enum: ['all', 'active', 'completed'] })
   @IsOptional() @IsIn(['all', 'active', 'completed'])
   filter?: 'all' | 'active' | 'completed';
 
   @ApiPropertyOptional({
-    enum: ['created_at', 'updated_at', 'title', 'completed', 'dueDate', 'priority'],
+    enum: ['created_at', 'updated_at', 'title', 'completed', 'dueDate', 'priority', 'scheduledStart'],
   })
   @IsOptional()
-  @IsIn(['created_at', 'updated_at', 'title', 'completed', 'dueDate', 'priority'])
-  sortBy?: 'created_at' | 'updated_at' | 'title' | 'completed' | 'dueDate' | 'priority';
+  @IsIn(['created_at', 'updated_at', 'title', 'completed', 'dueDate', 'priority', 'scheduledStart'])
+  sortBy?: 'created_at' | 'updated_at' | 'title' | 'completed' | 'dueDate' | 'priority' | 'scheduledStart';
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'] })
   @IsOptional() @IsIn(['asc', 'desc'])

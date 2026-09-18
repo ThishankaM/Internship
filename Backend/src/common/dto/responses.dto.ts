@@ -55,6 +55,44 @@ export class TagResponseDto {
   _count?: { todos: number };
 }
 
+export class ProjectResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  description: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  color: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  icon: string | null;
+
+  @ApiProperty()
+  status: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  dueDate: string | null;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  created_at: string;
+
+  @ApiProperty()
+  updated_at: string;
+
+  @ApiPropertyOptional()
+  _count?: { todos: number };
+
+  @ApiPropertyOptional()
+  stats?: { total: number; completed: number; progress: number; active: number };
+}
+
 export class TodoResponseDto {
   @ApiProperty()
   id: string;
@@ -80,6 +118,12 @@ export class TodoResponseDto {
   @ApiPropertyOptional({ nullable: true, example: '2026-09-20' })
   dueDate: string | null;
 
+  @ApiPropertyOptional({ nullable: true })
+  scheduledStart: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  scheduledEnd: string | null;
+
   @ApiProperty()
   comments: number;
 
@@ -91,6 +135,12 @@ export class TodoResponseDto {
 
   @ApiPropertyOptional({ type: CategoryResponseDto, nullable: true })
   category?: CategoryResponseDto | null;
+
+  @ApiPropertyOptional({ type: ProjectResponseDto, nullable: true })
+  project?: ProjectResponseDto | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  projectId?: string | null;
 
   @ApiPropertyOptional({ type: [TagResponseDto] })
   tags?: TagResponseDto[];

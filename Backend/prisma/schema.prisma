@@ -22,6 +22,7 @@ model User {
   categories   Category[]
   tags         Tag[]
   todos        Todo[]
+  projects     Project[]
 }
 
 model Category {
@@ -42,24 +43,48 @@ model Tag {
   todos      Todo[]   @relation("TagToTodo")
 }
 
-model Todo {
-  id          String    @id @default(uuid())
-  title       String
+model Project {
+  id          String   @id @default(uuid())
+  name        String
   description String?
-  completed   Boolean   @default(false)
-  status      String    @default("todo")
-  progress    Int       @default(0)
+  color       String?
+  icon        String?
+  status      String   @default("active")
   dueDate     String?
-  comments    Int       @default(0)
-  attachments Int       @default(0)
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
   userId      String
-  priority    Priority  @default(MEDIUM)
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-  tags        Tag[]     @relation("TagToTodo")
+  user        User     @relation(fields: [userId], references: [id])
+  todos       Todo[]
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Todo {
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  completed      Boolean   @default(false)
+  status         String    @default("todo")
+  progress       Int       @default(0)
+  dueDate        String?
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  comments       Int       @default(0)
+  attachments    Int       @default(0)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  userId         String
+  priority       Priority  @default(MEDIUM)
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references: [id])
+  projectId      String?
+  project        Project?  @relation(fields: [projectId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+  tags           Tag[]     @relation("TagToTodo")
+
+  @@index([projectId])
+  @@index([scheduledStart])
 }
 
 enum Priority {

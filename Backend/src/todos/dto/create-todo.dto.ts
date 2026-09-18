@@ -47,6 +47,16 @@ export class CreateTodoDto {
   @IsOptional()
   dueDate?: string;
 
+  @ApiPropertyOptional({ description: 'Scheduled start datetime ISO' })
+  @IsDateString()
+  @IsOptional()
+  scheduledStart?: string;
+
+  @ApiPropertyOptional({ description: 'Scheduled end datetime ISO' })
+  @IsDateString()
+  @IsOptional()
+  scheduledEnd?: string;
+
   @ApiPropertyOptional()
   @IsNumber()
   @IsOptional()
@@ -61,6 +71,11 @@ export class CreateTodoDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  projectId?: string;
 
   @ApiPropertyOptional({ type: [String] })
   @IsArray()

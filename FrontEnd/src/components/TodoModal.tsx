@@ -26,6 +26,7 @@ import type {
   TodoPriority,
   TodoStatus,
 } from "@/types/todo";
+import type { Project } from "@/types/project";
 
 interface TodoModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ interface TodoModalProps {
   editingTodo: Todo | null;
   categories: Category[];
   tags: Tag[];
+  projects: Project[];
   onClose: () => void;
   onSave: (payload: CreateTodoRequest) => Promise<boolean>;
 }
@@ -44,6 +46,15 @@ const STATUS_OPTIONS: { value: TodoStatus; label: string }[] = [
   { value: "done", label: "Done" },
 ];
 
+function toLocalDateTimeInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  // Convert to local datetime-local format YYYY-MM-DDTHH:mm
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function TodoModal({
   isOpen,
   isSaving,
@@ -51,6 +62,7 @@ export function TodoModal({
   editingTodo,
   categories,
   tags,
+  projects,
   onClose,
   onSave,
 }: TodoModalProps) {
@@ -66,8 +78,17 @@ export function TodoModal({
   );
   const [priority, setPriority] = useState(editingTodo?.priority ?? "MEDIUM");
   const [dueDate, setDueDate] = useState(editingTodo?.dueDate ?? "");
+  const [scheduledStart, setScheduledStart] = useState(
+    toLocalDateTimeInputValue(editingTodo?.scheduledStart)
+  );
+  const [scheduledEnd, setScheduledEnd] = useState(
+    toLocalDateTimeInputValue(editingTodo?.scheduledEnd)
+  );
   const [categoryId, setCategoryId] = useState(
     editingTodo?.category?.id ?? ""
+  );
+  const [projectId, setProjectId] = useState(
+    editingTodo?.projectId ?? editingTodo?.project?.id ?? ""
   );
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
     editingTodo?.tags?.map((tag) => tag.id) ?? []
@@ -81,6 +102,16 @@ export function TodoModal({
       setValidationError("Title is required.");
       return;
     }
+
+    if (scheduledStart && scheduledEnd) {
+      const s = new Date(scheduledStart);
+      const e = new Date(scheduledEnd);
+      if (e <= s) {
+        setValidationError("End time must be after start time.");
+        return;
+      }
+    }
+
     setValidationError("");
 
     const success = await onSave({
@@ -91,7 +122,10 @@ export function TodoModal({
       completed: status === "done",
       priority,
       dueDate: dueDate || undefined,
+      scheduledStart: scheduledStart ? new Date(scheduledStart).toISOString() : undefined,
+      scheduledEnd: scheduledEnd ? new Date(scheduledEnd).toISOString() : undefined,
       categoryId: categoryId || null,
+      projectId: projectId || null,
       tagIds: selectedTagIds.length ? selectedTagIds : undefined,
     });
 
@@ -105,7 +139,7 @@ export function TodoModal({
       open={isOpen}
       onOpenChange={(open) => !isSaving && !open && onClose()}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingTodo ? "Edit Task" : "Create New Task"}
@@ -129,6 +163,7 @@ export function TodoModal({
                 setTitle(event.target.value);
                 if (validationError) setValidationError("");
               }}
+              placeholder="Design landing page"
             />
             {validationError && (
               <p className="text-xs text-destructive">{validationError}</p>
@@ -143,6 +178,7 @@ export function TodoModal({
               value={description}
               disabled={isSaving}
               onChange={(event) => setDescription(event.target.value)}
+              placeholder="Task details..."
             />
           </div>
 
@@ -160,6 +196,10 @@ export function TodoModal({
                   setStatus(nextStatus);
                   if (nextStatus === "done") {
                     setProgress("100");
+                  } else if (nextStatus === "in-progress" && progress === "0") {
+                    setProgress("10");
+                  } else if (nextStatus === "todo" && progress === "100") {
+                    setProgress("0");
                   }
                 }}
               >
@@ -220,7 +260,61 @@ export function TodoModal({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="todo-scheduled-start">Scheduled Start</Label>
+              <Input
+                id="todo-scheduled-start"
+                type="datetime-local"
+                value={scheduledStart}
+                disabled={isSaving}
+                onChange={(e) => setScheduledStart(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">When you plan to work on it</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="todo-scheduled-end">Scheduled End</Label>
+              <Input
+                id="todo-scheduled-end"
+                type="datetime-local"
+                value={scheduledEnd}
+                disabled={isSaving}
+                onChange={(e) => setScheduledEnd(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">Different from due date</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="todo-project">Project</Label>
+              <Select
+                value={projectId || "none"}
+                items={{
+                  none: "No project",
+                  ...Object.fromEntries(
+                    projects.map((p) => [p.id, p.name])
+                  ),
+                }}
+                disabled={isSaving}
+                onValueChange={(value) =>
+                  setProjectId(value === "none" ? "" : value)
+                }
+              >
+                <SelectTrigger id="todo-project">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="todo-category">Category</Label>
               <Select
@@ -277,7 +371,7 @@ export function TodoModal({
                 ))}
               </select>
               <p className="text-xs text-muted-foreground">
-                Hold Ctrl/Cmd to select multiple tags.
+                Hold Ctrl/Cmd for multiple
               </p>
             </div>
           </div>

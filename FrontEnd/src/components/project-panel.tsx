@@ -1,13 +1,14 @@
 import React from "react";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Briefcase } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { LoadingState } from "@/components/states/loading-state";
 import { EmptyState } from "@/components/states/empty-state";
-import type { Todo } from "@/types/todo";
+import type { Project } from "@/types/project";
 
 interface ProjectPanelProps {
-  todos: Todo[];
+  projects: Project[];
   isLoading: boolean;
+  onSelectProject?: (project: Project) => void;
 }
 
 function ProgressRing({ value }: { value: number }) {
@@ -54,9 +55,9 @@ function ProgressRing({ value }: { value: number }) {
   );
 }
 
-export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
+export function ProjectPanel({ projects, isLoading, onSelectProject }: ProjectPanelProps) {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const topProjects = todos.slice(0, 4);
+  const topProjects = projects.slice(0, 4);
 
   return (
     <aside className="hidden w-72 flex-col gap-6 overflow-y-auto border-l border-border bg-sidebar p-6 lg:flex">
@@ -72,7 +73,7 @@ export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
 
       <div className="flex-1 rounded-xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-medium text-card-foreground">Today's Project</h3>
+          <h3 className="font-medium text-card-foreground">Today's Projects</h3>
           <MoreVertical size={16} className="text-muted-foreground" />
         </div>
 
@@ -81,27 +82,49 @@ export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
         {!isLoading && topProjects.length === 0 && (
           <EmptyState
             title="No projects"
-            message="Your tasks will appear here."
+            message="Create a project to organize your tasks."
           />
         )}
 
         {!isLoading &&
-          topProjects.map((todo) => (
-            <div
-              key={todo.id}
-              className="mb-3 flex items-center justify-between rounded-lg border border-border bg-muted/40 p-3"
+          topProjects.map((project) => (
+            <button
+              key={project.id}
+              onClick={() => onSelectProject?.(project)}
+              className="mb-3 flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 p-3 text-left transition-colors hover:bg-muted"
             >
-              <div className="min-w-0">
-                <h4 className="truncate text-sm text-foreground">
-                  {todo.title}
-                </h4>
-                <p className="truncate text-xs text-muted-foreground">
-                  {todo.description || "No description"}
-                </p>
+              <div className="min-w-0 flex items-center gap-3">
+                <div
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-white"
+                  style={{ backgroundColor: project.color || "#8A73FF" }}
+                >
+                  <Briefcase size={14} />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm text-foreground">
+                    {project.name}
+                  </h4>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {project.stats ? `${project.stats.completed}/${project.stats.total} tasks` : project.description || "No description"}
+                  </p>
+                </div>
               </div>
-              <ProgressRing value={todo.progress} />
-            </div>
+              <ProgressRing value={project.stats?.progress ?? 0} />
+            </button>
           ))}
+
+        {projects.length > 4 && (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            +{projects.length - 4} more projects
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-dashed border-border bg-card/50 p-4">
+        <h4 className="text-xs font-medium text-foreground">Tip</h4>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Due date = deadline. Scheduled time = when you work on it. Use both for better planning.
+        </p>
       </div>
     </aside>
   );

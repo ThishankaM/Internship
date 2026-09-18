@@ -1,3 +1,5 @@
+import type { Project } from "./project";
+
 export type TodoStatus = "todo" | "in-progress" | "done";
 export type TodoPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -30,9 +32,13 @@ export interface Todo {
   priority: TodoPriority;
   progress: number;
   dueDate: string | null;
+  scheduledStart: string | null;
+  scheduledEnd: string | null;
   comments: number;
   attachments: number;
   userId: string;
+  projectId?: string | null;
+  project?: Project | null;
   category?: Category | null;
   tags?: Tag[];
   created_at: string;
@@ -47,9 +53,12 @@ export interface CreateTodoRequest {
   priority?: TodoPriority;
   progress?: number;
   dueDate?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
   comments?: number;
   attachments?: number;
   categoryId?: string | null;
+  projectId?: string | null;
   tagIds?: string[];
 }
 

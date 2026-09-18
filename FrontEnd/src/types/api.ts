@@ -27,6 +27,7 @@ export interface TodoQueryParams {
   filter?: 'all' | 'active' | 'completed';
   categoryId?: string;
   tagId?: string;
+  projectId?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: number;
