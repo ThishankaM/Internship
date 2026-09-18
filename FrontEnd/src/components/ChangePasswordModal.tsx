@@ -51,14 +51,19 @@ export function ChangePasswordModal({
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to change password");
+      setError(
+        err instanceof ApiError ? err.message : "Failed to change password",
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isSaving && !isOpen && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => !isSaving && !isOpen && onClose()}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>

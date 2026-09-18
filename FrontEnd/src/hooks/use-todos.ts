@@ -6,11 +6,7 @@ import type {
   RequestStatus,
   TodoQueryParams,
 } from "@/types/api";
-import type {
-  CreateTodoRequest,
-  Todo,
-  UpdateTodoRequest,
-} from "@/types/todo";
+import type { CreateTodoRequest, Todo, UpdateTodoRequest } from "@/types/todo";
 
 export function useTodos(enabled: boolean = true) {
   const [data, setData] = useState<PaginatedResponse<Todo>>({
@@ -40,20 +36,22 @@ export function useTodos(enabled: boolean = true) {
 
   const fetchTodos = useCallback(
     async (currentParams: TodoQueryParams, signal?: AbortSignal) => {
-    setStatus("loading");
-    setError(null);
+      setStatus("loading");
+      setError(null);
 
-    try {
-      const result = await todoApi.getAll(currentParams, signal);
-      setData(result);
-      setStatus("success");
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setStatus("error");
-      setError(err instanceof ApiError ? err.message : "Failed to load todos");
-    }
+      try {
+        const result = await todoApi.getAll(currentParams, signal);
+        setData(result);
+        setStatus("success");
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setStatus("error");
+        setError(
+          err instanceof ApiError ? err.message : "Failed to load todos",
+        );
+      }
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -71,7 +69,7 @@ export function useTodos(enabled: boolean = true) {
         if ((err as Error).name === "AbortError") return;
         setStatus("error");
         setError(
-          err instanceof ApiError ? err.message : "Failed to load todos"
+          err instanceof ApiError ? err.message : "Failed to load todos",
         );
       });
 
@@ -87,22 +85,25 @@ export function useTodos(enabled: boolean = true) {
     }));
   }, []);
 
-  const createTodo = useCallback(async (payload: CreateTodoRequest) => {
-    setIsSaving(true);
-    setMutationError(null);
-    try {
-      const created = await todoApi.create(payload);
-      await fetchTodos(params);
-      return { ok: true as const, data: created };
-    } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Failed to create todo";
-      setMutationError(message);
-      return { ok: false as const, error: message };
-    } finally {
-      setIsSaving(false);
-    }
-  }, [fetchTodos, params]);
+  const createTodo = useCallback(
+    async (payload: CreateTodoRequest) => {
+      setIsSaving(true);
+      setMutationError(null);
+      try {
+        const created = await todoApi.create(payload);
+        await fetchTodos(params);
+        return { ok: true as const, data: created };
+      } catch (err) {
+        const message =
+          err instanceof ApiError ? err.message : "Failed to create todo";
+        setMutationError(message);
+        return { ok: false as const, error: message };
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [fetchTodos, params],
+  );
 
   const updateTodo = useCallback(
     async (id: string, payload: UpdateTodoRequest) => {
@@ -114,7 +115,7 @@ export function useTodos(enabled: boolean = true) {
       setData((current) => ({
         ...current,
         data: current.data.map((todo) =>
-          todo.id === id ? { ...todo, ...payload } : todo
+          todo.id === id ? { ...todo, ...payload } : todo,
         ),
       }));
 
@@ -135,26 +136,29 @@ export function useTodos(enabled: boolean = true) {
         setIsSaving(false);
       }
     },
-    []
+    [],
   );
 
-  const deleteTodo = useCallback(async (id: string) => {
-    setDeletingId(id);
-    setMutationError(null);
+  const deleteTodo = useCallback(
+    async (id: string) => {
+      setDeletingId(id);
+      setMutationError(null);
 
-    try {
-      await todoApi.remove(id);
-      await fetchTodos(params);
-      return { ok: true as const };
-    } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Failed to delete todo";
-      setMutationError(message);
-      return { ok: false as const, error: message };
-    } finally {
-      setDeletingId(null);
-    }
-  }, [fetchTodos, params]);
+      try {
+        await todoApi.remove(id);
+        await fetchTodos(params);
+        return { ok: true as const };
+      } catch (err) {
+        const message =
+          err instanceof ApiError ? err.message : "Failed to delete todo";
+        setMutationError(message);
+        return { ok: false as const, error: message };
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [fetchTodos, params],
+  );
 
   return {
     todos: data.data,

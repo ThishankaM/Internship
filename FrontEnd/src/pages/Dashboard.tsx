@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const {
     categories,
@@ -72,7 +73,7 @@ export default function Dashboard() {
       inProgressList: todos.filter((t) => t.status === "in-progress"),
       doneList: todos.filter((t) => t.status === "done"),
     }),
-    [todos]
+    [todos],
   );
 
   const openCreateModal = () => {
@@ -121,6 +122,8 @@ export default function Dashboard() {
         user={user}
         onLogout={logout}
         onChangePassword={() => setIsPasswordModalOpen(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       <main className="flex flex-1 flex-col overflow-hidden bg-background">
@@ -132,6 +135,7 @@ export default function Dashboard() {
           categories={categories}
           tags={tags}
           onManageTaxonomy={() => setIsOrganizerOpen(true)}
+          onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
         />
 
         {/* GLOBAL FETCH ERROR */}
@@ -148,7 +152,7 @@ export default function Dashboard() {
             onDragStart={(event) => {
               const draggedId = event.operation.source?.id;
               setActiveTodo(
-                todos.find((todo) => todo.id === draggedId) ?? null
+                todos.find((todo) => todo.id === draggedId) ?? null,
               );
             }}
             onDragEnd={(event) => {

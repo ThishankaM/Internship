@@ -14,9 +14,7 @@ vi.mock("@/hooks/use-auth-form", () => ({
 
 describe("AuthPage", () => {
   it("shows invalid login errors", async () => {
-    submitMock.mockRejectedValue(
-      new ApiError("Invalid credentials", 401),
-    );
+    submitMock.mockRejectedValue(new ApiError("Invalid credentials", 401));
 
     render(
       <MemoryRouter>
@@ -46,7 +44,9 @@ describe("AuthPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
-    expect(screen.getByRole("button", { name: /register/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /register/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
   });
 });

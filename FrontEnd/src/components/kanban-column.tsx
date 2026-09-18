@@ -34,9 +34,7 @@ export function KanbanColumn({
     <div
       ref={ref}
       className={`flex min-w-[220px] flex-1 flex-col rounded-xl border bg-card p-4 transition-colors ${
-        isDropTarget
-          ? "border-primary ring-2 ring-primary/30"
-          : "border-border"
+        isDropTarget ? "border-primary ring-2 ring-primary/30" : "border-border"
       }`}
     >
       <div className="mb-4 flex items-center justify-between">
@@ -84,8 +82,7 @@ export function KanbanColumn({
               onEdit={onEdit}
               onDelete={onDelete}
             />
-          ))
-        }
+          ))}
       </div>
     </div>
   );

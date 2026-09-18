@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/react";
 import { format, isBefore, parseISO, startOfToday } from "date-fns";
 import {
@@ -37,6 +38,36 @@ function TaskCardBody({
   onEdit,
   onDelete,
 }: TaskCardBodyProps) {
+  const menuRef = useRef<HTMLDetailsElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => {
+    if (menuRef.current) {
+      menuRef.current.open = false;
+    }
+    setIsMenuOpen(false);
+  };
+
+  // Close the menu when the user clicks/taps anywhere outside of it.
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const menu = menuRef.current;
+      if (
+        menu &&
+        event.target instanceof Node &&
+        !menu.contains(event.target)
+      ) {
+        menu.open = false;
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isMenuOpen]);
+
   const dueDate = todo.dueDate ? parseISO(todo.dueDate) : null;
   const isOverdue = dueDate
     ? isBefore(dueDate, startOfToday()) && !todo.completed
@@ -88,21 +119,31 @@ function TaskCardBody({
           {isDeleting ? (
             <Loader2 size={16} className="animate-spin text-muted-foreground" />
           ) : isOverlay ? null : (
-            <details className="relative">
+            <details
+              ref={menuRef}
+              onToggle={(event) => setIsMenuOpen(event.currentTarget.open)}
+              className="relative"
+            >
               <summary className="list-none cursor-pointer text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
                 <MoreHorizontal size={16} />
               </summary>
               <div className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-border bg-popover p-1 text-sm text-popover-foreground shadow-md">
                 <button
                   type="button"
-                  onClick={() => onEdit(todo)}
+                  onClick={() => {
+                    closeMenu();
+                    onEdit(todo);
+                  }}
                   className="block w-full rounded px-2 py-1.5 text-left transition-colors hover:bg-accent"
                 >
                   Edit Task
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDelete(todo.id)}
+                  onClick={() => {
+                    closeMenu();
+                    onDelete(todo.id);
+                  }}
                   className="block w-full rounded px-2 py-1.5 text-left text-destructive transition-colors hover:bg-accent"
                 >
                   Delete Task

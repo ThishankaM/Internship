@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  Menu,
   Moon,
   Plus,
   Search,
@@ -30,6 +31,7 @@ interface TaskToolbarProps {
   categories: Category[];
   tags: Tag[];
   onManageTaxonomy: () => void;
+  onToggleSidebar: () => void;
 }
 
 export function TaskToolbar({
@@ -40,6 +42,7 @@ export function TaskToolbar({
   categories,
   tags,
   onManageTaxonomy,
+  onToggleSidebar,
 }: TaskToolbarProps) {
   const { isDark, toggleTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState(params.search || "");
@@ -57,6 +60,15 @@ export function TaskToolbar({
   return (
     <header className="flex flex-col gap-3 border-b border-border px-6 py-4">
       <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSidebar}
+          aria-label="Open navigation"
+          className="md:hidden"
+        >
+          <Menu />
+        </Button>
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input

@@ -2,14 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { animate, stagger } from "animejs";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Eye,
-  EyeOff,
-  Loader2,
-  Lock,
-  Mail,
-  User,
-} from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,13 +44,15 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps) {
+export default function AuthPage({
+  mode: initialMode = "login",
+}: AuthPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [flashMessage, setFlashMessage] = useState<string | null>(
-    () => (location.state as { message?: string } | null)?.message ?? null
+    () => (location.state as { message?: string } | null)?.message ?? null,
   );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -150,7 +145,7 @@ export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps)
     if (prefersReducedMotion() || !formRef.current) return;
 
     const fields = Array.from(
-      formRef.current.querySelectorAll("[data-animate-field]")
+      formRef.current.querySelectorAll("[data-animate-field]"),
     );
     if (fields.length === 0) return;
 
@@ -172,7 +167,7 @@ export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps)
     if (prefersReducedMotion()) return;
 
     const blobs = [blobOneRef.current, blobTwoRef.current].filter(
-      (element): element is HTMLDivElement => element !== null
+      (element): element is HTMLDivElement => element !== null,
     );
     if (blobs.length === 0) return;
 
@@ -238,7 +233,7 @@ export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps)
       }
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : "Failed to request reset"
+        err instanceof ApiError ? err.message : "Failed to request reset",
       );
     } finally {
       setIsSubmitting(false);
@@ -455,9 +450,7 @@ export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps)
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowPassword((current) => !current)
-                          }
+                          onClick={() => setShowPassword((current) => !current)}
                           aria-label={
                             showPassword ? "Hide password" : "Show password"
                           }
@@ -527,9 +520,7 @@ export default function AuthPage({ mode: initialMode = "login" }: AuthPageProps)
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowPassword((current) => !current)
-                          }
+                          onClick={() => setShowPassword((current) => !current)}
                           aria-label={
                             showPassword ? "Hide password" : "Show password"
                           }

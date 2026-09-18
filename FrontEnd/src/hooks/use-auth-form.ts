@@ -13,7 +13,7 @@ export function useAuthForm() {
   const submit = useCallback(
     async (
       mode: "login" | "register",
-      payload: LoginRequest | RegisterRequest
+      payload: LoginRequest | RegisterRequest,
     ) => {
       setIsSubmitting(true);
 
@@ -29,7 +29,7 @@ export function useAuthForm() {
         setIsSubmitting(false);
       }
     },
-    [navigate, reloadUser]
+    [navigate, reloadUser],
   );
 
   return { submit, isSubmitting };

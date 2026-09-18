@@ -79,7 +79,10 @@ export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
         {isLoading && <LoadingState message="Loading projects..." />}
 
         {!isLoading && topProjects.length === 0 && (
-          <EmptyState title="No projects" message="Your tasks will appear here." />
+          <EmptyState
+            title="No projects"
+            message="Your tasks will appear here."
+          />
         )}
 
         {!isLoading &&
@@ -89,7 +92,9 @@ export function ProjectPanel({ todos, isLoading }: ProjectPanelProps) {
               className="mb-3 flex items-center justify-between rounded-lg border border-border bg-muted/40 p-3"
             >
               <div className="min-w-0">
-                <h4 className="truncate text-sm text-foreground">{todo.title}</h4>
+                <h4 className="truncate text-sm text-foreground">
+                  {todo.title}
+                </h4>
                 <p className="truncate text-xs text-muted-foreground">
                   {todo.description || "No description"}
                 </p>

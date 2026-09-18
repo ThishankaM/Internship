@@ -28,6 +28,7 @@ describe("TaskToolbar", () => {
         categories={[]}
         tags={[]}
         onManageTaxonomy={vi.fn()}
+        onToggleSidebar={vi.fn()}
       />,
     );
 

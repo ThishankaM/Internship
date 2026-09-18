@@ -23,7 +23,11 @@ export function useTaxonomy(enabled = true) {
       setTags(tagData);
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
-      setError(err instanceof ApiError ? err.message : "Failed to load categories and tags");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Failed to load categories and tags",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +52,7 @@ export function useTaxonomy(enabled = true) {
         setError(
           err instanceof ApiError
             ? err.message
-            : "Failed to load categories and tags"
+            : "Failed to load categories and tags",
         );
       })
       .finally(() => {
@@ -59,7 +63,9 @@ export function useTaxonomy(enabled = true) {
   }, [enabled]);
 
   const runMutation = useCallback(
-    async <T,>(operation: () => Promise<T>): Promise<{ ok: boolean; error?: string }> => {
+    async <T>(
+      operation: () => Promise<T>,
+    ): Promise<{ ok: boolean; error?: string }> => {
       setIsSaving(true);
       setError(null);
 
@@ -85,7 +91,8 @@ export function useTaxonomy(enabled = true) {
   );
 
   const updateCategory = useCallback(
-    (id: string, name: string) => runMutation(() => categoryApi.update(id, name)),
+    (id: string, name: string) =>
+      runMutation(() => categoryApi.update(id, name)),
     [runMutation],
   );
 

@@ -84,8 +84,8 @@ export default function AdminPage() {
       await apiClient.patch(`/admin/users/${id}/toggle-active`);
       setUsers((current) =>
         current.map((user) =>
-          user.id === id ? { ...user, isActive: !user.isActive } : user
-        )
+          user.id === id ? { ...user, isActive: !user.isActive } : user,
+        ),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user");
@@ -99,9 +99,7 @@ export default function AdminPage() {
     try {
       await apiClient.patch(`/admin/users/${id}/role`, { role });
       setUsers((current) =>
-        current.map((user) =>
-          user.id === id ? { ...user, role } : user
-        )
+        current.map((user) => (user.id === id ? { ...user, role } : user)),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update role");
@@ -156,7 +154,9 @@ export default function AdminPage() {
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground">Completed</p>
-              <p className="mt-1 text-2xl font-semibold">{stats.completedTodos}</p>
+              <p className="mt-1 text-2xl font-semibold">
+                {stats.completedTodos}
+              </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <p className="text-xs text-muted-foreground">Active</p>
@@ -191,7 +191,10 @@ export default function AdminPage() {
                         value={user.role}
                         disabled={pendingId === user.id}
                         onChange={(event) =>
-                          void changeRole(user.id, event.target.value as UserRole)
+                          void changeRole(
+                            user.id,
+                            event.target.value as UserRole,
+                          )
                         }
                         className="rounded-md border border-input bg-transparent px-2 py-1 text-sm"
                       >

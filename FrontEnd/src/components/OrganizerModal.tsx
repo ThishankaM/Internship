@@ -41,7 +41,9 @@ export function OrganizerModal({
 }: OrganizerModalProps) {
   const [categoryName, setCategoryName] = useState("");
   const [tagName, setTagName] = useState("");
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null,
+  );
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState("");
@@ -81,7 +83,10 @@ export function OrganizerModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isSaving && !isOpen && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => !isSaving && !isOpen && onClose()}
+    >
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Categories & Tags</DialogTitle>
@@ -127,7 +132,9 @@ export function OrganizerModal({
 
             <div className="space-y-2">
               {categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No categories yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  No categories yet.
+                </p>
               ) : (
                 categories.map((category) => (
                   <div
@@ -139,7 +146,9 @@ export function OrganizerModal({
                         <Input
                           value={editingCategoryName}
                           disabled={isSaving}
-                          onChange={(event) => setEditingCategoryName(event.target.value)}
+                          onChange={(event) =>
+                            setEditingCategoryName(event.target.value)
+                          }
                         />
                         <Button
                           type="button"
@@ -242,7 +251,9 @@ export function OrganizerModal({
                         <Input
                           value={editingTagName}
                           disabled={isSaving}
-                          onChange={(event) => setEditingTagName(event.target.value)}
+                          onChange={(event) =>
+                            setEditingTagName(event.target.value)
+                          }
                         />
                         <Button
                           type="button"
