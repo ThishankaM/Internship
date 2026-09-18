@@ -84,6 +84,7 @@ export function TaskToolbar({
             size="icon"
             onClick={toggleTheme}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDark ? <Moon size={16} /> : <Sun size={16} />}
           </Button>
